@@ -164,11 +164,8 @@
    */
   function hasUTMParameters() {
     const urlParams = new URLSearchParams(window.location.search);
-    // Check voor bluestars-ai-site UTM parameters
-    return urlParams.get('utm_source') === 'bluestars-ai-site' ||
-           urlParams.get('utm_medium') === 'chat' ||
-           urlParams.has('utm_content') || // product ID
-           urlParams.has('utm_term'); // search query
+    // Alleen checken op utm_source=bluestars-ai-site
+    return urlParams.get('utm_source') === 'bluestars-ai-site';
   }
   
   /**
