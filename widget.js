@@ -1,176 +1,358 @@
 /**
- * Kunstpakket Analytics Tracking Only
+ * Kunstpakket Analytics Tracking
  * 
- * Dit script trackt alleen clicks en purchases van de externe AI site.
- * Geen search functionaliteit meer - die gebeurt op de externe AI site.
+ * Trackt product page views en purchases voor analytics dashboard.
  * 
  * Locatie: Kunstpakket.nl
  */
 (function() {
   'use strict';
   
-  const VERSION = '6.0.0';
-  const ANALYTICS_API = 'https://analytics.bluestars.app/api/track';
-  const TRACKING_EXPIRY_DAYS = 7;
+  const VERSION = '7.0.0';
+  const ANALYTICS_API = 'https://analytics.bluestars.app/api/track'; // Update met je analytics URL
+  const CLIENT_ID = 'kunstpakket.nl';
   
   /**
-   * LocalStorage helpers with expiry
+   * Track event naar analytics API
    */
-  function setWithExpiry(key, value, days = TRACKING_EXPIRY_DAYS) {
-    const now = new Date();
-    const item = {
-      value: value,
-      expiry: now.getTime() + (days * 24 * 60 * 60 * 1000)
-    };
-    localStorage.setItem(key, JSON.stringify(item));
+  async function trackEvent(eventData) {
+    try {
+      const response = await fetch(ANALYTICS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: CLIENT_ID,
+          ...eventData
+        }),
+        keepalive: true,
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) {
+        console.warn('[KP Analytics] Tracking failed:', await response.text());
+      } else {
+        console.log('[KP Analytics] ✅ Event tracked:', eventData.event);
+      }
+    } catch (err) {
+      console.warn('[KP Analytics] Tracking error:', err.message);
+    }
   }
   
-  function getWithExpiry(key) {
-    const itemStr = localStorage.getItem(key);
-    if (!itemStr) return null;
+  /**
+   * Extract product ID uit URL of DOM
+   */
+  function extractProductId() {
+    // Optie 1: Uit UTM parameter (als die bestaat)
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmContent = urlParams.get('utm_content');
+    if (utmContent) {
+      return utmContent;
+    }
     
+    // Optie 2: Uit URL path
+    const pathMatch = window.location.pathname.match(/\/product\/([^\/]+)/);
+    if (pathMatch) {
+      return pathMatch[1].replace('.html', '');
+    }
+    
+    // Optie 3: Uit DOM element (data-product-id attribute)
+    const productIdEl = document.querySelector('[data-product-id]');
+    if (productIdEl) {
+      return productIdEl.getAttribute('data-product-id');
+    }
+    
+    // Optie 4: Uit meta tag
+    const metaProductId = document.querySelector('meta[property="product:id"], meta[name="product:id"]');
+    if (metaProductId) {
+      return metaProductId.getAttribute('content');
+    }
+    
+    // Optie 5: Uit script tag (JSON-LD structured data)
     try {
-      const item = JSON.parse(itemStr);
-      const now = new Date();
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      if (jsonLd) {
+        const data = JSON.parse(jsonLd.textContent);
+        if (data['@type'] === 'Product' && data.sku) {
+          return data.sku;
+        }
+        if (data['@type'] === 'Product' && data.productID) {
+          return data.productID;
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    return null; // Product ID is optioneel
+  }
+  
+  /**
+   * Extract order total uit pagina
+   */
+  function extractOrderTotal() {
+    // Optie 1: Uit data attribute
+    const orderTotalEl = document.querySelector('[data-order-total]');
+    if (orderTotalEl) {
+      const value = parseFloat(orderTotalEl.getAttribute('data-order-total'));
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    // Optie 2: Uit text content (zoek naar prijs)
+    const priceElements = document.querySelectorAll('[class*="price"], [class*="total"], [id*="total"], [class*="amount"]');
+    for (const el of priceElements) {
+      const text = el.textContent || el.innerText;
+      // Match: €12,99 of €12.99 of 12,99 of 12.99
+      const match = text.match(/€?\s*(\d+[.,]\d{2})/);
+      if (match) {
+        const value = parseFloat(match[1].replace(',', '.'));
+        if (!isNaN(value) && value > 0) return value;
+      }
+    }
+    
+    // Optie 3: Uit JavaScript variabele
+    if (window.orderTotal) {
+      const value = parseFloat(window.orderTotal);
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    if (window.order && window.order.total) {
+      const value = parseFloat(window.order.total);
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    // Optie 4: Uit JSON-LD structured data
+    try {
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      if (jsonLd) {
+        const data = JSON.parse(jsonLd.textContent);
+        if (data.totalPrice) {
+          const value = parseFloat(data.totalPrice);
+          if (!isNaN(value) && value > 0) return value;
+        }
+        if (data.price) {
+          const value = parseFloat(data.price);
+          if (!isNaN(value) && value > 0) return value;
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Optie 5: Uit URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const total = urlParams.get('total') || urlParams.get('amount') || urlParams.get('price');
+    if (total) {
+      const value = parseFloat(total);
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Check of we op een product pagina zijn
+   */
+  function isProductPage() {
+    const path = window.location.pathname.toLowerCase();
+    return path.includes('/product/') || 
+           (path.match(/\/[^\/]+\.html$/) && document.querySelector('[data-product-id]'));
+  }
+  
+  /**
+   * Check of er UTM parameters in de URL staan
+   */
+  function hasUTMParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    // Check voor bluestars-ai-site UTM parameters
+    return urlParams.get('utm_source') === 'bluestars-ai-site' ||
+           urlParams.get('utm_medium') === 'chat' ||
+           urlParams.has('utm_content') || // product ID
+           urlParams.has('utm_term'); // search query
+  }
+  
+  /**
+   * Check of we op thank you pagina zijn
+   */
+  function isThankYouPage() {
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const title = document.title.toLowerCase();
+    
+    return path.includes('/thank-you') ||
+           path.includes('/thankyou') ||
+           path.includes('/bedankt') ||
+           path.includes('/order-success') ||
+           path.includes('/bestelling-bevestigd') ||
+           search.includes('order=success') ||
+           search.includes('status=success') ||
+           search.includes('thankyou') ||
+           search.includes('bedankt') ||
+           title.includes('bedankt') ||
+           title.includes('thank you') ||
+           document.querySelector('[data-thank-you-page]') !== null;
+  }
+  
+  /**
+   * Sla product view info op in localStorage
+   */
+  function saveProductViewInfo() {
+    const productId = extractProductId();
+    const productUrl = window.location.href;
+    
+    // Sla op in localStorage voor purchase tracking
+    try {
+      localStorage.setItem('kp_product_id', productId || '');
+      localStorage.setItem('kp_product_url', productUrl || '');
+      localStorage.setItem('kp_view_timestamp', Date.now().toString());
+    } catch (e) {
+      console.warn('[KP Analytics] Failed to save to localStorage:', e);
+    }
+  }
+  
+  /**
+   * Track product page view
+   * Alleen als er UTM parameters in de URL staan!
+   */
+  function trackProductView() {
+    // Alleen tracken als er UTM parameters zijn
+    if (!hasUTMParameters()) {
+      return;
+    }
+    
+    // Prevent double tracking
+    if (window.productViewTracked) return;
+    
+    const productId = extractProductId();
+    const productUrl = window.location.href;
+    
+    // Track view event
+    trackEvent({
+      event: 'view',
+      product_id: productId,
+      product_url: productUrl
+    });
+    
+    // Sla info op in localStorage voor purchase tracking
+    saveProductViewInfo();
+    
+    window.productViewTracked = true;
+  }
+  
+  /**
+   * Haal product info op uit localStorage
+   */
+  function getStoredProductInfo() {
+    try {
+      const productId = localStorage.getItem('kp_product_id') || null;
+      const productUrl = localStorage.getItem('kp_product_url') || null;
+      const viewTimestamp = localStorage.getItem('kp_view_timestamp');
       
-      if (now.getTime() > item.expiry) {
-        localStorage.removeItem(key);
-        return null;
+      // Check of view info niet ouder is dan 7 dagen
+      if (viewTimestamp) {
+        const viewTime = parseInt(viewTimestamp);
+        const daysSinceView = (Date.now() - viewTime) / (1000 * 60 * 60 * 24);
+        if (daysSinceView > 7) {
+          // Te oud, verwijder
+          clearStoredProductInfo();
+          return null;
+        }
       }
       
-      return item.value;
+      return {
+        product_id: productId,
+        product_url: productUrl
+      };
     } catch (e) {
+      console.warn('[KP Analytics] Failed to read from localStorage:', e);
       return null;
     }
   }
   
-  function removeTracking() {
-    localStorage.removeItem('kp_search_id');
-    localStorage.removeItem('kp_last_product_id');
-    localStorage.removeItem('kp_last_product_url');
-    localStorage.removeItem('kp_last_query');
+  /**
+   * Verwijder opgeslagen product info
+   */
+  function clearStoredProductInfo() {
+    try {
+      localStorage.removeItem('kp_product_id');
+      localStorage.removeItem('kp_product_url');
+      localStorage.removeItem('kp_view_timestamp');
+    } catch (e) {
+      // Ignore
+    }
   }
   
   /**
-   * Track purchase op thank you pagina
+   * Track purchase (thank you page)
+   * Gebruikt opgeslagen info uit localStorage
    */
   function trackPurchase() {
-    try {
-      const searchId = getWithExpiry('kp_search_id');
-      if (!searchId) return;
-      
-      const productId = getWithExpiry('kp_last_product_id');
-      const productUrl = getWithExpiry('kp_last_product_url');
-      
-      fetch(ANALYTICS_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'purchase',
-          client_id: 'kunstpakket.nl',
-          search_id: searchId,
-          product_id: productId || null,
-          product_url: productUrl || null
-        })
-      }).catch(err => console.warn('[Analytics] Purchase tracking failed:', err));
-      
-      // Clear tracking data after purchase
-      removeTracking();
-    } catch (err) {
-      console.warn('[Analytics] Error:', err);
-    }
-  }
-  
-  /**
-   * Check voor purchase pagina
-   */
-  function checkPurchasePage() {
-    const url = window.location.href.toLowerCase();
-    const title = document.title.toLowerCase();
+    // Prevent double tracking
+    if (window.purchaseTracked) return;
+    window.purchaseTracked = true;
     
-    if (url.includes('/thankyou') || 
-        url.includes('?thankyou') ||
-        url.includes('/bedankt') ||
-        url.includes('?bedankt') ||
-        url.includes('/thank-you') ||
-        url.includes('/success') ||
-        url.includes('?order=success') ||
-        title.includes('bedankt') ||
-        title.includes('thank you')) {
-      trackPurchase();
+    const orderTotal = extractOrderTotal();
+    
+    if (!orderTotal || orderTotal <= 0) {
+      console.warn('[KP Analytics] Order total not found, purchase not tracked');
+      return;
     }
-  }
-  
-  /**
-   * Check voor click tracking parameter (iOS Safari proof!)
-   * URL format: ?bsclick=1&bssid=search_id&bspid=product_id&bspname=product_name
-   * All params prefixed with 'bs' to prevent Lightspeed filtering
-   */
-  function checkClickTracking() {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      if (urlParams.get('bsclick') === '1') {
-        const searchId = urlParams.get('bssid');
-        const productId = urlParams.get('bspid');
-        const productName = urlParams.get('bspname');
-        
-        if (searchId && productId) {
-          console.log('[KP Analytics] Click tracking detected:', { searchId, productId, productName });
-          
-          // Sla search_id op voor purchase tracking
-          setWithExpiry('kp_search_id', searchId);
-          setWithExpiry('kp_last_product_id', productId);
-          setWithExpiry('kp_last_product_url', window.location.pathname.replace('.html', '').replace('/', ''));
-          
-          const data = JSON.stringify({
-            event: 'click',
-            client_id: 'kunstpakket.nl',
-            search_id: searchId,
-            product_id: productId,
-            product_name: productName || null,
-            product_url: window.location.pathname.replace('.html', '').replace('/', '')
-          });
-          
-          // Use fetch with keepalive (more reliable than sendBeacon for CORS)
-          fetch(ANALYTICS_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: data,
-            keepalive: true,
-            mode: 'cors',
-            credentials: 'omit'
-          })
-          .then(() => console.log('[KP Analytics] Click tracked ✅'))
-          .catch(err => console.warn('[KP Analytics] Click tracking failed:', err.message));
-          
-          // Clean up URL (remove tracking params)
-          urlParams.delete('bsclick');
-          urlParams.delete('bssid');
-          urlParams.delete('bspid');
-          urlParams.delete('bspname');
-          
-          const newSearch = urlParams.toString();
-          const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
-          window.history.replaceState({}, '', newUrl);
-        }
-      }
-    } catch (err) {
-      console.warn('[KP Analytics] Click tracking error:', err);
-    }
+    
+    // Haal product info op uit localStorage (van product view)
+    const storedInfo = getStoredProductInfo();
+    
+    // Gebruik opgeslagen info, of fallback naar huidige pagina
+    const productId = storedInfo?.product_id || extractProductId();
+    const productUrl = storedInfo?.product_url || window.location.href;
+    
+    // Track purchase event
+    trackEvent({
+      event: 'purchase',
+      product_id: productId,
+      product_url: productUrl,
+      order_total: orderTotal
+    });
+    
+    // Verwijder opgeslagen info na purchase
+    clearStoredProductInfo();
   }
   
   /**
    * Initialize tracking
    */
   function init() {
-    console.log(`[KP Analytics] v${VERSION} loaded - Tracking only mode`);
+    console.log(`[KP Analytics] v${VERSION} loaded`);
     
-    // Always check for click tracking (from external AI site)
-    checkClickTracking();
+    // Track product view
+    if (isProductPage()) {
+      trackProductView();
+    }
     
-    // Always check for purchase page
-    checkPurchasePage();
+    // Track purchase
+    if (isThankYouPage()) {
+      trackPurchase();
+    }
+    
+    // Listen for URL changes (SPA support)
+    if (window.history && window.history.pushState) {
+      const originalPushState = window.history.pushState;
+      window.history.pushState = function(...args) {
+        originalPushState.apply(window.history, args);
+        setTimeout(() => {
+          // Reset tracking flags on navigation
+          window.productViewTracked = false;
+          window.purchaseTracked = false;
+          
+          if (isProductPage()) {
+            trackProductView();
+          }
+          
+          if (isThankYouPage()) {
+            trackPurchase();
+          }
+        }, 100);
+      };
+    }
   }
   
   // Initialize on page load
@@ -180,11 +362,24 @@
     init();
   }
   
-  // Public API (for backwards compatibility)
+  // Also check periodically (for dynamic content)
+  setInterval(() => {
+    if (isProductPage() && !window.productViewTracked) {
+      trackProductView();
+    }
+    
+    if (isThankYouPage() && !window.purchaseTracked) {
+      trackPurchase();
+    }
+  }, 2000);
+  
+  // Public API
   window.KunstpakketAnalytics = {
     version: VERSION,
-    trackClick: checkClickTracking,
-    trackPurchase: checkPurchasePage
+    trackProductView: trackProductView,
+    trackPurchase: trackPurchase,
+    extractProductId: extractProductId,
+    extractOrderTotal: extractOrderTotal
   };
   
 })();
