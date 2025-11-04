@@ -254,7 +254,7 @@
   {
     "id": 11492653,
     "createdAt": "2022-05-27T09:03:59+02:00",
-    "updatedAt": "2025-10-12T09:54:37+02:00",
+    "updatedAt": "2025-10-29T09:09:21+01:00",
     "isVisible": true,
     "depth": 1,
     "path": [
@@ -380,7 +380,7 @@
   {
     "id": 10778817,
     "createdAt": "2021-04-13T08:30:54+02:00",
-    "updatedAt": "2025-10-25T13:22:06+02:00",
+    "updatedAt": "2025-10-27T10:35:58+01:00",
     "isVisible": true,
     "depth": 1,
     "path": [
@@ -392,7 +392,7 @@
     "url": "museum-kunstcadeaus",
     "title": "Museum Kunstcadeaus",
     "fulltitle": "Kunstcadeaus van Oude & Moderne Meesters – Museumcollectie bij Kunstpakket",
-    "description": "Laat je verrassen door Museumstukken: luxe kunsthars beelden, mokken, onderzetters, vazen geïnspireerd op grootmeesters zoals Rodin, Van Gogh en Dalí ontworpen om als kunstcadeau te intrigeren.",
+    "description": "Ontdek Museumkunst – een exclusieve collectie van luxe kunsthars en verbronsde beelden, mokken, vazen, theelichten en meer. Geïnspireerd op grootmeesters als Escher, Corneille, Rodin, Van Gogh en Dalí. Stijlvolle cadeaus of een kunstzinnige touch in huis.",
     "content": "<h3 class=\"\" data-start=\"114\" data-end=\"193\"><strong data-start=\"118\" data-end=\"191\">Beelden van Oude &amp; Moderne Meesters – Museumcollectie bij Kunstpakket</strong></h3>\r\n<p class=\"\" data-start=\"195\" data-end=\"435\">Ontdek onze prachtige <strong data-start=\"217\" data-end=\"238\">kunsthars beelden, mokken, onderzetters, vazen</strong> en meer geïnspireerd op de grootste meesters uit de kunstgeschiedenis. Deze exclusieve collectie omvat <strong data-start=\"334\" data-end=\"379\">beelden gebaseerd op beroemde kunstwerken</strong> en wordt geleverd in een <strong data-start=\"405\" data-end=\"432\">luxe geschenkverpakking</strong>.</p>\r\n<h4 class=\"\" data-start=\"437\" data-end=\"481\"><strong data-start=\"442\" data-end=\"479\">Beelden naar Beroemde Kunstenaars</strong></h4>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\">Onze collectie bevat beelden geïnspireerd door wereldberoemde kunstenaars, zoals:</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"569\" data-end=\"586\">Salvador Dalí</strong> – Surrealistische kunst in 3D-vorm</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"627\" data-end=\"647\">Richard Orlinski</strong> – Moderne, dynamische sculpturen</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"686\" data-end=\"706\">Vincent van Gogh</strong> – Iconische kunst vertaald naar beeld</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"750\" data-end=\"766\">Gustav Klimt</strong> – Beeldhouwwerken met een gouden touch</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"811\" data-end=\"826\" data-is-only-node=\"\">M.C. Escher</strong> – Optische illusies in sculpturen</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"866\" data-end=\"887\">Leonardo da Vinci</strong> – Renaissancekunst in beeldvorm</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"987\" data-end=\"1004\">Auguste Rodin</strong> – Expressieve en realistische bronzen beelden</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"><strong data-start=\"1056\" data-end=\"1075\">Selwyn Senatori</strong> – Pop-art geïnspireerde beelden</p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\">... en vele andere <strong data-start=\"1129\" data-end=\"1160\">museumwaardige kunstbeelden</strong>!</p>\r\n<p class=\"\" data-start=\"1206\" data-end=\"1400\">Onze collectie is perfect voor liefhebbers van <strong data-start=\"1253\" data-end=\"1287\">kunst, musea en designobjecten</strong>. Deze kunsthars beelden zijn ideaal als <strong data-start=\"1328\" data-end=\"1360\">cadeau voor kunstliefhebbers</strong>, ter decoratie of als verzamelobject.</p>\r\n<p class=\"\" data-start=\"1402\" data-end=\"1655\"><strong data-start=\"1402\" data-end=\"1460\">Waarom kiezen voor de museumcollectie van Kunstpakket?</strong><br data-start=\"1460\" data-end=\"1463\" />✅ Luxe kunsthars beelden met oog voor detail<br data-start=\"1507\" data-end=\"1510\" />✅ Geïnspireerd op meesterwerken uit de kunstgeschiedenis<br data-start=\"1566\" data-end=\"1569\" />✅ Stijlvol verpakt – perfect als geschenk<br data-start=\"1610\" data-end=\"1613\" />✅ Unieke decoratie voor thuis of kantoor</p>\r\n<p class=\"\" data-start=\"1657\" data-end=\"1753\"><strong data-start=\"1657\" data-end=\"1751\">Bestel nu een beeld uit onze museumcollectie en haal een stukje kunstgeschiedenis in huis!</strong></p>\r\n<p class=\"\" data-start=\"482\" data-end=\"1163\"> </p>",
     "image": {
       "createdAt": "2025-10-19T13:12:35+02:00",
@@ -422,7 +422,7 @@
   {
     "id": 10284228,
     "createdAt": "2020-09-17T20:01:12+02:00",
-    "updatedAt": "2025-10-26T11:42:41+01:00",
+    "updatedAt": "2025-10-29T16:07:00+01:00",
     "isVisible": true,
     "depth": 1,
     "path": [
@@ -435,7 +435,7 @@
     "title": "Moderne Kunstcadeaus",
     "fulltitle": "Collectie eigentijdse moderne Kunstcadeaus met betekenis",
     "description": "Verras iemand met een uniek kunstcadeau! Van mokken, vazen en beelden tot wandborden, geïnspireerd door kunstenaars zoals Klimt, Van Gogh en Mondriaan. Perfect cadeau voor verjaardag, jubileum of zomaar. Gratis verzending.",
-    "content": "<p data-start=\"1531\" data-end=\"1850\"><strong data-start=\"1531\" data-end=\"1561\">Kunstcadeaus met betekenis</strong><br data-start=\"1561\" data-end=\"1564\" />Een cadeau geven wordt pas echt bijzonder wanneer het persoonlijk en tijdloos is. Bij Kunstpakket.nl vindt u een uitgebreide collectie <strong data-start=\"1699\" data-end=\"1715\">kunstcadeaus</strong> die schoonheid, creativiteit en cultuur combineren. Perfect als <strong data-start=\"1780\" data-end=\"1847\">cadeau voor een verjaardag, jubileum, relatiegeschenk of zomaar</strong>.</p>\r\n<p data-start=\"1852\" data-end=\"2105\"><strong data-start=\"1852\" data-end=\"1883\">Onze collectie kunstcadeaus</strong><br data-start=\"1883\" data-end=\"1886\" />Wij bieden een breed assortiment <strong data-start=\"1919\" data-end=\"1935\">kunstcadeaus</strong> geïnspireerd door beroemde kunstenaars zoals Klimt, Van Gogh, Mondriaan, Monet en Degas. Elk cadeau is met zorg gemaakt en brengt een stukje kunstgeschiedenis in huis.</p>\r\n<ul data-start=\"2107\" data-end=\"2501\">\r\n<li data-start=\"2107\" data-end=\"2179\">\r\n<p data-start=\"2109\" data-end=\"2179\"><strong data-start=\"2109\" data-end=\"2120\">Mokken:</strong> Praktisch en stijlvol, bedrukt met iconische kunstwerken</p>\r\n</li>\r\n<li data-start=\"2180\" data-end=\"2270\">\r\n<p data-start=\"2182\" data-end=\"2270\"><strong data-start=\"2182\" data-end=\"2194\">Beelden:</strong> Van klassieke meesterwerken tot moderne sculpturen, ideaal als eyecatcher</p>\r\n</li>\r\n<li data-start=\"2271\" data-end=\"2338\">\r\n<p data-start=\"2273\" data-end=\"2338\"><strong data-start=\"2273\" data-end=\"2283\">Vazen:</strong> Elegante kunstobjecten die ieder interieur verrijken</p>\r\n</li>\r\n<li data-start=\"2339\" data-end=\"2431\">\r\n<p data-start=\"2341\" data-end=\"2431\"><strong data-start=\"2341\" data-end=\"2356\">Wandborden:</strong> Decoratief en inspirerend met kunstmotieven uit verschillende stromingen</p>\r\n</li>\r\n<li data-start=\"2432\" data-end=\"2501\">\r\n<p data-start=\"2434\" data-end=\"2501\"><strong data-start=\"2434\" data-end=\"2446\">Schalen:</strong> Functioneel en artistiek, perfect om cadeau te geven</p>\r\n</li>\r\n</ul>\r\n<p data-start=\"2503\" data-end=\"2626\"><strong data-start=\"2503\" data-end=\"2545\">Bestel uw kunstcadeau eenvoudig online</strong> en verras iemand met een betekenisvol en uniek cadeau dat blijft indruk maken.</p>",
+    "content": "<p data-start=\"1531\" data-end=\"1850\"><strong data-start=\"1531\" data-end=\"1561\">Kunstcadeaus met betekenis</strong><br data-start=\"1561\" data-end=\"1564\" />Een cadeau geven wordt pas echt bijzonder wanneer het persoonlijk en tijdloos is. Bij Kunstpakket.nl vindt u een uitgebreide collectie <strong data-start=\"1699\" data-end=\"1715\">kunstcadeaus</strong> die schoonheid, creativiteit en cultuur combineren. Perfect als <strong data-start=\"1780\" data-end=\"1847\">cadeau voor een verjaardag, jubileum, relatiegeschenk of zomaar</strong>.</p>\r\n<p data-start=\"1852\" data-end=\"2105\"><strong data-start=\"1852\" data-end=\"1883\">Onze collectie kunstcadeaus</strong><br data-start=\"1883\" data-end=\"1886\" />Wij bieden een breed assortiment <strong data-start=\"1919\" data-end=\"1935\">kunstcadeaus</strong> geïnspireerd door beroemde kunstenaars zoals Klimt, Van Gogh, Mondriaan, Monet en Degas. Elk cadeau is met zorg gemaakt en brengt een stukje kunstgeschiedenis in huis.</p>\r\n<ul data-start=\"2107\" data-end=\"2501\">\r\n<li data-start=\"2107\" data-end=\"2179\">\r\n<p data-start=\"2109\" data-end=\"2179\"><strong data-start=\"2109\" data-end=\"2120\">Mokken:</strong> Praktisch en stijlvol, bedrukt met iconische kunstwerken</p>\r\n</li>\r\n<li data-start=\"2180\" data-end=\"2270\">\r\n<p data-start=\"2182\" data-end=\"2270\"><strong data-start=\"2182\" data-end=\"2194\">Beelden:</strong> Van klassieke meesterwerken tot moderne sculpturen, ideaal als eyecatcher</p>\r\n</li>\r\n<li data-start=\"2271\" data-end=\"2338\">\r\n<p data-start=\"2273\" data-end=\"2338\"><strong data-start=\"2273\" data-end=\"2283\">Vazen:</strong> Elegante kunstobjecten die ieder interieur verrijken</p>\r\n</li>\r\n<li data-start=\"2339\" data-end=\"2431\">\r\n<p data-start=\"2341\" data-end=\"2431\"><strong data-start=\"2341\" data-end=\"2356\">Wandborden:</strong> Decoratief en inspirerend met kunstmotieven uit verschillende stromingen</p>\r\n</li>\r\n<li data-start=\"2432\" data-end=\"2501\">\r\n<p data-start=\"2434\" data-end=\"2501\"><strong data-start=\"2434\" data-end=\"2446\">Schalen:</strong> Functioneel en artistiek, perfect om cadeau te geven</p>\r\n</li>\r\n</ul>\r\n<p data-start=\"2503\" data-end=\"2626\"><strong data-start=\"2503\" data-end=\"2545\">Bestel uw kunstcadeau eenvoudig online</strong> en verras iemand met een betekenisvol en uniek cadeau dat indruk blijft maken.</p>",
     "image": {
       "createdAt": "2025-10-25T13:15:15+02:00",
       "updatedAt": "2025-10-25T13:15:15+02:00",
@@ -674,7 +674,7 @@
   {
     "id": 8159315,
     "createdAt": "2019-01-07T18:30:26+01:00",
-    "updatedAt": "2025-10-25T15:14:14+02:00",
+    "updatedAt": "2025-10-28T09:29:58+01:00",
     "isVisible": true,
     "depth": 1,
     "path": [

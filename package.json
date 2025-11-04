@@ -1,7 +1,7 @@
 {
   "name": "kunstpakket-ai-search",
   "version": "2.0.0",
-  "description": "AI-powered search widget for Kunstpakket.nl",
+  "description": "AI-powered search API for Kunstpakket.nl - Vector similarity search with OpenAI embeddings",
   "scripts": {
     "sync": "node scripts/sync-lightspeed.js",
     "import": "node scripts/import-products.js",

@@ -12,58 +12,39 @@ Run the sync scripts when:
 
 ## 📊 Sync Scripts
 
-### 1. Fetch Brands (`fetch-brands.mjs`)
-Fetches all brand data from Lightspeed and saves to `data/brands.json`.
+### 1. Sync Lightspeed Data (`sync-lightspeed.js`)
+Syncs all catalog data (brands, categories, products) from Lightspeed API.
 
 ```bash
-node scripts/fetch-brands.mjs
+npm run sync
 ```
 
-**Output**: `data/brands.json` with all brand IDs and names.
+**Output**:
+- `data/brands.json` - All brand data
+- `data/categories.json` - All category data
+- `data/products.json` - All product data with embeddings
 
-### 2. Fetch Categories (`fetch-categories.mjs`)
-Fetches all category data from Lightspeed and saves to `data/categories.json`.
+### 2. Import Products (`import-products.js`)
+Imports products to database with embeddings and type detection.
 
 ```bash
-node scripts/fetch-categories.mjs
+npm run import
 ```
 
-**Output**: `data/categories.json` with all category IDs and names.
-
-### 3. Fetch Product Types (`fetch-product-types.mjs`)
-Extracts distinct product types from the database and saves to `data/product-types.json`.
-
-```bash
-node scripts/fetch-product-types.mjs
-```
-
-**Output**: `data/product-types.json` with all product types sorted by frequency.
-
-### 4. Import Products (`import-products.js`)
-Imports products from Lightspeed, generates embeddings, and detects types.
-
-```bash
-node scripts/import-products.js
-```
-
-**Note**: Run this AFTER fetching brands, as it uses `data/brands.json` for artist lookup.
+**Note**: This is the main import script that handles the complete data pipeline.
 
 ## 🚀 Complete Sync Workflow
 
 For a fresh start or after major catalog changes:
 
 ```bash
-# 1. Fetch catalog metadata
-node scripts/fetch-brands.mjs
-node scripts/fetch-categories.mjs
+# 1. Sync all catalog data from Lightspeed
+npm run sync
 
-# 2. Import products (uses brands data)
-node scripts/import-products.js
+# 2. Import products to database with embeddings
+npm run import
 
-# 3. Extract product types from database
-node scripts/fetch-product-types.mjs
-
-# 4. Deploy to Vercel
+# 3. Deploy to Vercel
 git add data/*.json
 git commit -m "chore: update catalog data"
 git push origin main
@@ -77,6 +58,9 @@ All catalog data is stored in `data/` directory:
 |------|--------|------------------|
 | `brands.json` | Lightspeed API | When brands change |
 | `categories.json` | Lightspeed API | When categories change |
+| `products.json` | Lightspeed API | Daily/Weekly |
+| `categories-products.json` | Lightspeed API | Daily/Weekly |
+| `tags.json` & `tags-products.json` | Lightspeed API | Daily/Weekly |
 | `product-types.json` | Database | After product import |
 | `themes.json` | Curated/Manual | Rarely (search keywords) |
 
@@ -130,7 +114,7 @@ The same codebase works for all sites - only the data files differ!
 
 ## ⚠️ Important Notes
 
-- **Always fetch brands BEFORE importing products** (import needs brand data)
+- **Always run sync BEFORE importing products** (import needs catalog data)
 - **Themes are curated** (`data/themes.json`) - edit manually for best search results
 - **Restart Vercel functions** after updating data files (automatic on git push)
 - **Cache is per-process** - each serverless function instance caches independently
@@ -138,15 +122,15 @@ The same codebase works for all sites - only the data files differ!
 ## 🔧 Troubleshooting
 
 ### "Missing catalog data file"
-Run the appropriate fetch script to generate the missing file.
+Run `npm run sync` to fetch all catalog data from Lightspeed.
 
 ### "Category not found"
-Run `fetch-categories.mjs` to update category data.
+Run `npm run sync` to update all category data.
 
 ### "Brand mismatch"
 1. Check `data/brands.json` has latest Lightspeed data
-2. Re-import products with `import-products.js`
+2. Re-run `npm run sync` and `npm run import`
 
 ### "Types out of sync"
-Run `fetch-product-types.mjs` after product changes to extract latest types from database.
+Re-run `npm run import` after product changes to extract latest types from database.
 

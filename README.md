@@ -1,45 +1,44 @@
-# 🔍 Kunstpakket AI Search
+# 🔍 Kunstpakket AI Search API
 
 **AI-powered search engine voor Kunstpakket.nl**
 
-Een moderne product search die natuurlijke taal begrijpt, gebouwd met OpenAI + Neon Postgres.
+Een moderne product search die natuurlijke taal begrijpt, gebouwd met OpenAI + Neon Postgres met pgvector.
 
 **Hoe het werkt:**
 ```
-Gebruiker: "beeldje met hart max 80 euro"
+Gebruiker op externe AI site: "beeldje met hart max 80 euro"
     ↓
-AI Parser → { categories: ["beelden"], tag_terms: ["hart"], price_max: 80 }
+Externe AI site → POST /api/search
     ↓
-Neon DB → 12 producten (alle matches, breed zoeken)
+AI Embedding → Vector similarity search in Neon DB
     ↓
-AI Advisor → "Ik vond 12 beeldjes met hartmotieven onder €80. Het beeldje 'Liefde Eeuwig' past perfect..."
+Resultaten met tracking params → Link naar kunstpakket.nl
+    ↓
+widget.js op kunstpakket.nl → Track clicks & purchases
 ```
 
 ---
 
 ## 📋 Project Status
 
-### ✅ Fase 1: Infrastructure (COMPLETE)
-- [x] Lightspeed API integratie
-- [x] Product, variant, tag & category sync
-- [x] Neon database schema
-- [x] Data import pipeline
-- [x] Full-text search indexes
+### ✅ Core Features (COMPLETE)
+- [x] Vector similarity search met pgvector
+- [x] OpenAI embeddings (text-embedding-3-small)
+- [x] AI-generated conversational advice messages
+- [x] Product metadata (categories, tags, dimensions, artist)
+- [x] Analytics tracking (clicks & purchases)
 
-### ✅ Fase 2: AI Search Engine (COMPLETE)
-- [x] OpenAI query parser (natuurlijke taal → filters)
-- [x] Postgres full-text search (Dutch stemming)
-- [x] Broad matching (alle resultaten, geen top-K limiting)
-- [x] AI result advisor (persoonlijk advies)
-- [x] Multi-field search (title, description, tags, categories)
-- [x] Price filtering
+### 🎯 Architecture
 
-### 🎯 Fase 3: Production Ready (NEXT)
-- [ ] Frontend integration
-- [ ] Caching layer (frequent queries)
-- [ ] Search analytics logging
-- [ ] Performance monitoring
-- [ ] Rate limiting
+**Externe AI Site:**
+- Gebruikt `/api/search` endpoint
+- Toont search results
+- Linkt naar kunstpakket.nl met tracking params (`?bsclick=1&bssid=...&bspid=...`)
+
+**Kunstpakket.nl:**
+- `widget.js` - Alleen analytics tracking (geen search UI)
+- Track clicks van externe AI site
+- Track purchases op thank you pagina
 
 ---
 
@@ -58,26 +57,10 @@ cp env.example .env
 ```
 
 Edit `.env` met je credentials:
-- **LIGHTSPEED_API_KEY** & **LIGHTSPEED_SECRET** - Lightspeed API credentials
-- **DATABASE_URL** - Neon Postgres connection string (maak via [neon.tech](https://neon.tech))
-- **OPENAI_API_KEY** - OpenAI API key (maak via [platform.openai.com](https://platform.openai.com))
+- **DATABASE_URL** - Neon Postgres connection string (met pgvector)
+- **OPENAI_API_KEY** - OpenAI API key
 
-### 3. Sync Data from Lightspeed
-
-```bash
-npm run sync
-```
-
-Dit download:
-- **Products** - alle producten met titel, beschrijving, prijs, etc.
-- **Variants** - kleuren, maten, voorraad per variant
-- **Tags** - product tags (bijv. "cadeau", "liefde", "sport")
-- **Categories** - product categorieën (bijv. "Beelden", "Schilderijen")
-- **Relations** - tag-product en category-product koppelingen
-
-Data wordt opgeslagen in `data/*.json`
-
-### 4. Setup Database Schema
+### 3. Setup Database Schema
 
 ```bash
 npm run db:schema
@@ -85,21 +68,21 @@ npm run db:schema
 
 Dit maakt alle tabellen en indexes aan in Neon.
 
-### 5. Import Data to Neon
+### 4. Sync & Import Data
 
 ```bash
+# Sync data van Lightspeed
+npm run sync
+
+# Import naar database
 npm run import
 ```
 
-Dit laadt alle Lightspeed data in de database.
+### 5. Deploy API
 
-### 6. Test Search
-
-```bash
-npm run search "beeldje met hart max 80 euro"
-```
-
-Dit test de volledige AI search pipeline!
+Deploy naar Vercel:
+- `/api/search` - Main search endpoint (gebruikt door externe AI site)
+- `/api/ping` - Health check endpoint
 
 ---
 
@@ -107,39 +90,37 @@ Dit test de volledige AI search pipeline!
 
 ```
 kunstpakket-ai-search/
-├── schema/                    # Database migrations
-│   ├── 001_products.sql
-│   ├── 002_tags.sql
-│   ├── 003_categories.sql
-│   └── 004_variants.sql
+├── api/
+│   ├── search.ts          # Main search endpoint (vector similarity)
+│   └── ping.ts            # Health check
+│
+├── schema/                # Database migrations
+│   ├── 001_init.sql
+│   ├── 002_add_type.sql
+│   ├── 004_add_artist.sql
+│   ├── 005_add_dimensions.sql
+│   └── 006_add_tags.sql
 │
 ├── scripts/
 │   ├── sync-lightspeed.js    # Lightspeed → Local JSON sync
 │   ├── setup-schema.js       # Create database tables
-│   ├── import-to-neon.js     # Import JSON → Neon DB
-│   └── test-search.js        # CLI search testing
+│   ├── import-products.js    # Import JSON → Neon DB
+│   └── test-*.mjs           # Test scripts (development)
 │
 ├── lib/
-│   ├── db.js                 # Neon connection helper
-│   ├── parse-query.js        # AI query parser (OpenAI)
-│   ├── build-search-query.js # SQL query builder
-│   └── advise-results.js     # AI result advisor (OpenAI)
+│   ├── catalog-metadata.ts   # Dynamic catalog data for AI prompts
+│   └── type-detector.js      # Product type detection
 │
-├── api/
-│   └── search.js             # Main search endpoint
+├── public/
+│   └── widget.js             # Analytics tracking only (voor kunstpakket.nl)
 │
-├── tests/
-│   └── search-queries.json   # Test cases
-│
-├── data/                      # Synced data (gitignored)
+├── data/                     # Synced data (gitignored)
 │   ├── products.json
-│   ├── variants.json
-│   ├── tags.json
-│   ├── tags-products.json
 │   ├── categories.json
-│   └── categories-products.json
+│   ├── tags.json
+│   └── ...
 │
-├── .env                       # Your credentials (gitignored)
+├── .env                      # Your credentials (gitignored)
 ├── env.example               # Environment template
 ├── package.json
 └── README.md
@@ -147,172 +128,114 @@ kunstpakket-ai-search/
 
 ---
 
-## 🤖 How AI Search Works
+## 🔌 API Endpoints
 
-### 1. Query Parsing (AI)
+### POST /api/search
 
-**Input:** `"beeldje met hart max 80 euro"`
-
-**AI genereert synoniemen:**
-- `beeldje` → `["beeldje", "beeldjes", "beeld", "beelden", "sculptuur", "sculpture"]`
-- `hart` → `["hart", "hartje", "liefde", "love", "heart"]`
-- `max 80 euro` → `price_max: 80`
-
-**Output:**
-```javascript
+**Request:**
+```json
 {
-  search_terms: ["beeldje", "beeld", "sculptuur"],
-  tag_terms: ["hart", "hartje", "liefde", "love"],
-  price_max: 80,
-  categories: ["beelden"],
-  confidence: 0.95
+  "query": "beeldje met hart max 80 euro"
 }
 ```
 
-### 2. Database Query (Postgres)
-
-**SQL query** met full-text search + filters:
-```sql
-SELECT * FROM products p
-WHERE p.is_visible = true
-  AND (
-    p.search_vector @@ to_tsquery('dutch', 'beeldje | beeld | sculptuur')
-    OR category IN ('beelden', 'beeldjes')
-  )
-  AND price <= 80
-  AND EXISTS (tags matching 'hart%' OR 'liefde%' OR 'love%')
-ORDER BY relevance DESC, price ASC
+**Response:**
+```json
+{
+  "success": true,
+  "query": {
+    "original": "beeldje met hart max 80 euro",
+    "took_ms": 450
+  },
+  "results": {
+    "total": 12,
+    "showing": 12,
+    "items": [
+      {
+        "id": 123,
+        "title": "Liefde Eeuwig",
+        "fullTitle": "Liefde Eeuwig - Beeldje",
+        "description": "...",
+        "url": "liefde-eeuwig",
+        "price": 65.00,
+        "oldPrice": null,
+        "onSale": false,
+        "discount": 0,
+        "image": "https://...",
+        "type": "beeld",
+        "artist": null,
+        "dimensions": "15x10x8 cm",
+        "stock": 3,
+        "stockSold": 45,
+        "isPopular": true,
+        "isScarce": true,
+        "categories": [
+          { "id": 5, "name": "Beelden" }
+        ],
+        "similarity": 0.85
+      }
+    ],
+    "advice": "✨ Wat fijn dat je zoekt naar een kat beeld! Ik heb 8 prachtige beelden voor je gevonden..."
+  }
+}
 ```
 
-**Resultaat:** Alle 12 matches (niet top-6 zoals vector search!)
+### GET /api/ping
 
-### 3. AI Advisor
-
-**Input:** 12 producten gevonden
-
-**AI genereert advies:**
-```
-"Ik vond 12 beeldjes met hartmotieven onder €80. 
-Het beeldje 'Liefde Eeuwig' (€65) is een topper - 
-prachtige detaillering en handgemaakt. Ook mooi: 
-'Hart van Brons' (€72) van een lokale kunstenaar."
-```
+Health check endpoint. Returns `OK`.
 
 ---
 
-## 🗄️ Database Schema
+## 🔧 Widget Integration (Kunstpakket.nl)
 
-**Waarom Neon Postgres?**
-- ✅ Beste full-text search (tsvector, Dutch stemming)
-- ✅ Serverless, auto-scaling
-- ✅ Snelle indexes (GIN voor text, B-tree voor price)
-- ✅ Gratis tier (0.5 GB storage, 100 uur compute/maand)
+De `widget.js` is nu alleen voor analytics tracking. Voeg toe aan kunstpakket.nl:
 
-**Database schema:**
-
-```sql
--- Products table (genormaliseerd)
-CREATE TABLE products (
-  id INTEGER PRIMARY KEY,
-  title TEXT NOT NULL,
-  full_title TEXT,
-  content TEXT,
-  brand TEXT,
-  supplier TEXT,
-  price DECIMAL(10,2),
-  url TEXT,
-  image TEXT,
-  is_visible BOOLEAN DEFAULT true,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP,
-  
-  -- Full-text search columns
-  search_vector tsvector GENERATED ALWAYS AS (
-    setweight(to_tsvector('dutch', coalesce(title, '')), 'A') ||
-    setweight(to_tsvector('dutch', coalesce(full_title, '')), 'B') ||
-    setweight(to_tsvector('dutch', coalesce(content, '')), 'C') ||
-    setweight(to_tsvector('dutch', coalesce(brand, '')), 'D')
-  ) STORED
-);
-
-CREATE INDEX products_search_idx ON products USING GIN(search_vector);
-CREATE INDEX products_title_trgm_idx ON products USING GIN(title gin_trgm_ops);
-
--- Tags table
-CREATE TABLE tags (
-  id INTEGER PRIMARY KEY,
-  title TEXT NOT NULL UNIQUE
-);
-
--- Product-Tag relations (many-to-many)
-CREATE TABLE product_tags (
-  product_id INTEGER REFERENCES products(id),
-  tag_id INTEGER REFERENCES tags(id),
-  PRIMARY KEY (product_id, tag_id)
-);
-
--- Categories table
-CREATE TABLE categories (
-  id INTEGER PRIMARY KEY,
-  title TEXT NOT NULL,
-  parent_id INTEGER REFERENCES categories(id),
-  url TEXT
-);
-
--- Product-Category relations (many-to-many)
-CREATE TABLE product_categories (
-  product_id INTEGER REFERENCES products(id),
-  category_id INTEGER REFERENCES categories(id),
-  PRIMARY KEY (product_id, category_id)
-);
-
--- Variants table (optional - voor voorraad/kleur/maat filtering)
-CREATE TABLE variants (
-  id INTEGER PRIMARY KEY,
-  product_id INTEGER REFERENCES products(id),
-  title TEXT,
-  sku TEXT,
-  price DECIMAL(10,2),
-  stock INTEGER DEFAULT 0
-);
+```html
+<script src="https://kunstpakket.bluestars.app/widget.js"></script>
 ```
+
+**Wat het doet:**
+- Track clicks van externe AI site (via URL params `?bsclick=1&bssid=...&bspid=...`)
+- Track purchases op thank you pagina
+- Sla tracking data op in localStorage (7 dagen geldig)
+
+**Geen search UI meer** - de externe AI site doet de search.
 
 ---
 
-## 🔎 Search Features
+## 🤖 How Search Works
 
-### ✅ Breed Zoeken (geen vector search limiting)
+### 1. Vector Embedding (OpenAI)
 
-**Belangrijk verschil met vector search:**
-- ❌ Vector search: "beeldje" → top 6 meest relevante
-- ✅ Onze search: "beeldje" → **alle 400 beeldjes** (met pagination)
+**Input:** `"beeldje met hart max 80 euro"`
 
-We gebruiken AI voor **begrip** en **advies**, niet voor result limiting.
+**AI genereert embedding:**
+- 1536-dimension vector via `text-embedding-3-small`
+- Capture semantic meaning (niet alleen keywords)
 
-### Full-Text Search (Postgres)
+### 2. Vector Similarity Search (pgvector)
 
-**Features:**
-- ✅ Nederlandse stemming (cadeau = cadeautje)
-- ✅ Weighted ranking (titel > beschrijving)
-- ✅ AI-gegenereerde synoniemen (beeldje → sculptuur)
-- ✅ Fast (GIN indexes, < 100ms)
+**SQL query:**
+```sql
+SELECT 
+  p.*,
+  1 - (p.embedding <=> $1::vector) as similarity
+FROM products p
+WHERE p.is_visible = true 
+  AND p.embedding IS NOT NULL
+  AND (1 - (p.embedding <=> $1::vector)) >= 0.32
+ORDER BY p.embedding <=> $1::vector
+LIMIT 50
+```
 
-### AI-Powered Understanding
+**Resultaat:** Producten gesorteerd op semantic similarity
 
-**Zonder AI:**
-- "beeldje met hart" → zoekt literal "hart" in tags
+### 3. AI Advice Generation
 
-**Met AI:**
-- "beeldje met hart" → zoekt: hart, hartje, liefde, love, heart (synoniemen)
-- "goedkoop cadeau" → AI zet "goedkoop" om naar `price_max: 50`
-- "iets voor moeder" → AI herkent: cadeau, moeder, mama, moederdag
-
-### Personalized Advice
-
-AI geeft context-aware advies:
-- **Veel resultaten (>50):** "Wil je specifieker zoeken? Bijv. op thema of prijs?"
-- **Weinig resultaten (<20):** "Het beeldje 'X' past perfect omdat..."
-- **Geen resultaten:** "Probeer andere zoektermen of minder filters"
+AI genereert een persoonlijk adviesbericht op basis van:
+- Query van gebruiker
+- Aantal resultaten
+- Catalog metadata (types, categories, themes)
 
 ---
 
@@ -321,21 +244,22 @@ AI geeft context-aware advies:
 ```json
 {
   "dependencies": {
-    "dotenv": "^16.4.5",
+    "@ai-sdk/openai": "^1.0.0",
     "@vercel/postgres": "^0.10.0",
-    "openai": "^4.70.0"
+    "ai": "^4.0.0",
+    "zod": "^3.23.0"
   }
 }
 ```
 
 ### Kosten
 
-**OpenAI (GPT-4o-mini):**
-- Parse query: ~500 tokens → **$0.0001** per search
-- Generate advice: ~1000 tokens → **$0.0002** per search
-- **Totaal: ~$0.0003 per search** (€0.30 per 1000 searches)
+**OpenAI (text-embedding-3-small + gpt-4o-mini):**
+- Embedding: ~$0.00002 per search
+- Advice generation: ~$0.0002 per search
+- **Totaal: ~$0.00022 per search** (€0.22 per 1000 searches)
 
-Bij 1000 searches/dag = **€9/maand**
+Bij 1000 searches/dag = **€6.60/maand**
 
 **Neon Postgres:**
 - Free tier: 0.5 GB storage, 100 uur compute/maand
@@ -343,13 +267,13 @@ Bij 1000 searches/dag = **€9/maand**
 
 ---
 
-## 🎯 Performance Targets
+## 🎯 Performance
 
 | Metric | Target | Actual |
 |--------|--------|--------|
 | Total response time | < 2000ms | ~450ms ✅ |
-| AI parse | < 300ms | ~180ms ✅ |
-| DB query | < 100ms | ~45ms ✅ |
+| Embedding generation | < 100ms | ~50ms ✅ |
+| Vector search | < 100ms | ~45ms ✅ |
 | AI advice | < 500ms | ~225ms ✅ |
 
 **Schaalbaarheid:**
@@ -359,95 +283,14 @@ Bij 1000 searches/dag = **€9/maand**
 
 ---
 
-## 🔧 Usage Examples
-
-### CLI Testing
-
-```bash
-# Basic search
-npm run search "beeldje"
-
-# With filters
-npm run search "beeldje met hart max 80 euro"
-
-# Theme search
-npm run search "cadeau voor moeder"
-
-# Color + category
-npm run search "blauw servies"
-```
-
-### Programmatic Usage
-
-```javascript
-import { search } from './api/search.js';
-
-const result = await search("beeldje met hart max 80 euro", 20, 0);
-
-console.log(`Found ${result.results.total} products`);
-console.log(`Advice: ${result.results.advice}`);
-console.log(`Products:`, result.results.items);
-```
-
-### API Response Format
-
-```json
-{
-  "success": true,
-  "query": {
-    "original": "beeldje met hart max 80 euro",
-    "parsed": {
-      "search_terms": ["beeldje", "beeld", "sculptuur"],
-      "tag_terms": ["hart", "hartje", "liefde"],
-      "price_max": 80,
-      "categories": ["beelden"]
-    },
-    "confidence": 0.95
-  },
-  "results": {
-    "total": 12,
-    "showing": 12,
-    "items": [
-      {
-        "id": 123,
-        "title": "Liefde Eeuwig",
-        "price": 65.00,
-        "image": "https://...",
-        "url": "/products/liefde-eeuwig"
-      }
-    ],
-    "advice": "Ik vond 12 beeldjes met hartmotieven onder €80..."
-  },
-  "meta": {
-    "took_ms": 450,
-    "ai_parse_ms": 180,
-    "db_query_ms": 45,
-    "ai_advice_ms": 225
-  }
-}
-```
-
----
-
 ## 📚 Resources
 
-**Postgres Full-Text Search:**
-- [Official Docs](https://www.postgresql.org/docs/current/textsearch.html)
-- [Dutch Language Config](https://www.postgresql.org/docs/current/textsearch-dictionaries.html)
-- [GIN Indexes](https://www.postgresql.org/docs/current/gin.html)
-
-**Trigram Matching:**
-- [pg_trgm Extension](https://www.postgresql.org/docs/current/pgtrgm.html)
-
-**Hybrid Search:**
-- [pgvector](https://github.com/pgvector/pgvector)
+**Postgres pgvector:**
+- [pgvector Documentation](https://github.com/pgvector/pgvector)
 - [Neon + pgvector Guide](https://neon.tech/docs/extensions/pgvector)
 
----
-
-## 🤝 Contributing
-
-Dit is een internal project voor Kunstpakket.nl
+**OpenAI Embeddings:**
+- [OpenAI Embeddings Guide](https://platform.openai.com/docs/guides/embeddings)
 
 ---
 
@@ -457,27 +300,5 @@ Private - All Rights Reserved
 
 ---
 
-## 🚀 Next Steps
-
-1. **Frontend Integration**
-   - Maak search UI component
-   - Implement pagination
-   - Add filter chips (prijs, categorie)
-
-2. **Production Optimization**
-   - Cache frequent queries (Redis/in-memory)
-   - Add search analytics logging
-   - Implement rate limiting
-
-3. **Advanced Features**
-   - Autocomplete/suggestions
-   - "Did you mean..." voor typos
-   - Related products
-   - Search trends dashboard
-
----
-
-**Status:** ✅ Core Engine Complete - Ready for Integration  
-**Last Updated:** 2025-10-23
-
-
+**Status:** ✅ Production Ready  
+**Last Updated:** 2025-01-XX

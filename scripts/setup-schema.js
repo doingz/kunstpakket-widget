@@ -15,7 +15,10 @@ async function setupSchema() {
     // Execute all schema migrations in order
     const migrations = [
       'schema/001_init.sql',
-      'schema/002_add_type.sql'
+      'schema/002_add_type.sql',
+      'schema/004_add_artist.sql',
+      'schema/005_add_dimensions.sql',
+      'schema/006_add_tags.sql'
     ];
     
     for (const migrationFile of migrations) {

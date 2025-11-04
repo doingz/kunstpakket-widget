@@ -19,11 +19,15 @@ const products = JSON.parse(fs.readFileSync('data/products.json', 'utf-8'));
 const variants = JSON.parse(fs.readFileSync('data/variants.json', 'utf-8'));
 const categories = JSON.parse(fs.readFileSync('data/categories.json', 'utf-8'));
 const categoriesProducts = JSON.parse(fs.readFileSync('data/categories-products.json', 'utf-8'));
+const tags = JSON.parse(fs.readFileSync('data/tags.json', 'utf-8'));
+const tagsProducts = JSON.parse(fs.readFileSync('data/tags-products.json', 'utf-8'));
 
 console.log(`   Products: ${products.length}`);
 console.log(`   Variants: ${variants.length}`);
 console.log(`   Categories: ${categories.length}`);
 console.log(`   Category mappings: ${categoriesProducts.length}`);
+console.log(`   Tags: ${tags.length}`);
+console.log(`   Tag mappings: ${tagsProducts.length}`);
 console.log('');
 
 // Build variant map (productId -> default variant with price)
@@ -60,6 +64,16 @@ brandsData.forEach(brand => {
 console.log(`✅ Mapped ${brandMap.size} brands`);
 console.log('');
 
+// Build tag map (tagId -> tag title)
+const tagMap = new Map();
+tags.forEach(tag => {
+  if (tag.isVisible) {
+    tagMap.set(tag.id, tag.title);
+  }
+});
+console.log(`✅ Mapped ${tagMap.size} visible tags`);
+console.log('');
+
 // Build embedding text from product data
 function buildEmbeddingText(product) {
   // Get category names for this product
@@ -69,6 +83,15 @@ function buildEmbeddingText(product) {
   
   const categoryNames = productCategoryIds
     .map(id => categoryMap.get(id))
+    .filter(Boolean);
+  
+  // Get tag names for this product
+  const productTagIds = tagsProducts
+    .filter(tp => tp.product.resource.id === product.id)
+    .map(tp => tp.tag.resource.id);
+  
+  const tagNames = productTagIds
+    .map(id => tagMap.get(id))
     .filter(Boolean);
   
   // Get brand name from brand map
@@ -82,7 +105,8 @@ function buildEmbeddingText(product) {
     product.description?.replace(/<[^>]*>/g, ''), // Strip HTML
     product.content?.replace(/<[^>]*>/g, ''), // Include content for artist info!
     brandName, // Use real brand name from Lightspeed!
-    ...categoryNames // Add category names to embedding!
+    ...categoryNames, // Add category names to embedding!
+    ...tagNames // Add tag names to embedding!
   ].filter(Boolean);
   
   return parts.join(' ').trim();
@@ -139,6 +163,13 @@ function getProductCategories(productId) {
   return categoriesProducts
     .filter(cp => cp.product.resource.id === productId)
     .map(cp => cp.category.resource.id);
+}
+
+// Get tags for a product
+function getProductTags(productId) {
+  return tagsProducts
+    .filter(tp => tp.product.resource.id === productId)
+    .map(tp => tp.tag.resource.id);
 }
 
 // Process in batches to avoid rate limits
@@ -238,6 +269,16 @@ async function processBatch(batch, batchNum, totalBatches) {
           ON CONFLICT (product_id, category_id) DO NOTHING
         `;
       }
+      
+      // Insert tags
+      const productTags = getProductTags(product.id);
+      for (const tagId of productTags) {
+        await sql`
+          INSERT INTO product_tags (product_id, tag_id)
+          VALUES (${product.id}, ${tagId})
+          ON CONFLICT (product_id, tag_id) DO NOTHING
+        `;
+      }
     }
     
     console.log(`  ✅ Batch complete! (${inserted} new, ${updated} updated)`);
@@ -250,6 +291,25 @@ async function processBatch(batch, batchNum, totalBatches) {
 
 async function main() {
   console.log('📦 Starting import...\n');
+  
+  // Import ALL tags (including invisible ones) for foreign key integrity
+  // We'll only use visible tags for search/filtering, but need all for product_tag relations
+  console.log('📋 Importing tags...');
+  let tagsImported = 0;
+  for (const tag of tags) {
+    await sql`
+      INSERT INTO tags (id, title, url, is_visible)
+      VALUES (${tag.id}, ${tag.title}, ${tag.url || null}, ${tag.isVisible || false})
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        url = EXCLUDED.url,
+        is_visible = EXCLUDED.is_visible,
+        updated_at = NOW()
+    `;
+    tagsImported++;
+  }
+  console.log(`✅ Imported ${tagsImported} tags (all tags for FK integrity)`);
+  console.log('');
   
   // Filter visible products only
   const visibleProducts = products.filter(p => p.isVisible);
