@@ -155,8 +155,8 @@
    */
   function isProductPage() {
     const path = window.location.pathname.toLowerCase();
-    return path.includes('/product/') || 
-           (path.match(/\/[^\/]+\.html$/) && document.querySelector('[data-product-id]'));
+    return path.includes('/product/') ||
+           (path.match(/\/[^\/]+\.html$/) && hasUTMParameters());
   }
   
   /**

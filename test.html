@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Kunstpakket Widget - Heart to Heart</title>
+</head>
+<body>
+    <h1>Test pagina voor Kunstpakket Widget</h1>
+    <p>Deze pagina simuleert de heart-to-heart.html pagina op kunstpakket.nl</p>
+
+    <!-- Simuleer product pagina content zoals op kunstpakket.nl -->
+    <div>
+        <h2>Ger van Tankeren Beeld "Heart to heart" incl. verzendkosten binnen NL.</h2>
+        <p>Heart to Heart bronzen beeld</p>
+        <p>Op marmeren sokkel. Tin gegoten en hierna verbronsd.</p>
+        <p>Prijs: €99,00 Incl. btw</p>
+    </div>
+
+    <!-- Laad de widget -->
+    <script src="widget.js"></script>
+
+    <script>
+        // Test of de widget geladen is
+        console.log('Widget version:', window.KunstpakketAnalytics?.version);
+
+        // Test de extract functies
+        setTimeout(() => {
+            if (window.KunstpakketAnalytics) {
+                console.log('Product ID:', window.KunstpakketAnalytics.extractProductId());
+                console.log('Is product page:', window.location.pathname.includes('test.html'));
+
+                // Simuleer wat er zou moeten gebeuren
+                console.log('URL params:', new URLSearchParams(window.location.search).toString());
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
