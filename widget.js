@@ -462,7 +462,7 @@
       .kp-ai-banner {
         position: relative !important;
         margin: 15px 0 !important;
-        padding: 3px !important;
+        padding: 1px !important;
         border-radius: 12px !important;
         background: linear-gradient(90deg, 
           #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
@@ -487,7 +487,7 @@
       .kp-ai-banner-content {
         background: white !important;
         border-radius: 10px !important;
-        padding: 15px 20px !important;
+        padding: 14px !important;
         display: flex !important;
         align-items: center !important;
         gap: 12px !important;
