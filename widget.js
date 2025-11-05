@@ -49,25 +49,25 @@
     if (utmContent) {
       return utmContent;
     }
-    
+
     // Optie 2: Uit URL path
     const pathMatch = window.location.pathname.match(/\/product\/([^\/]+)/);
     if (pathMatch) {
       return pathMatch[1].replace('.html', '');
     }
-    
+
     // Optie 3: Uit DOM element (data-product-id attribute)
     const productIdEl = document.querySelector('[data-product-id]');
     if (productIdEl) {
       return productIdEl.getAttribute('data-product-id');
     }
-    
+
     // Optie 4: Uit meta tag
     const metaProductId = document.querySelector('meta[property="product:id"], meta[name="product:id"]');
     if (metaProductId) {
       return metaProductId.getAttribute('content');
     }
-    
+
     // Optie 5: Uit script tag (JSON-LD structured data)
     try {
       const jsonLd = document.querySelector('script[type="application/ld+json"]');
@@ -83,8 +83,40 @@
     } catch (e) {
       // Ignore
     }
-    
+
     return null; // Product ID is optioneel
+  }
+
+  /**
+   * Extract product title uit pagina
+   */
+  function extractProductTitle() {
+    // Optie 1: Uit meta tag (Open Graph title - aanbevolen)
+    const metaTitle = document.querySelector('meta[property="og:title"]');
+    if (metaTitle) {
+      return metaTitle.getAttribute('content');
+    }
+
+    // Optie 2: Uit h1 tag met product class
+    const h1 = document.querySelector('h1.product-title, h1[data-product-title]');
+    if (h1) {
+      return h1.textContent.trim();
+    }
+
+    // Optie 3: Uit data attribute
+    const dataTitle = document.querySelector('[data-product-title]');
+    if (dataTitle) {
+      return dataTitle.getAttribute('data-product-title');
+    }
+
+    // Optie 4: Uit page title (laatste redmiddel)
+    const pageTitle = document.title;
+    if (pageTitle && pageTitle !== 'Kunstpakket') {
+      // Verwijder site naam van title
+      return pageTitle.replace(/\s*[-|]\s*Kunstpakket.*$/i, '').trim();
+    }
+
+    return null; // Optioneel - API accepteert null
   }
   
   /**
@@ -197,11 +229,13 @@
   function saveProductViewInfo() {
     const productId = extractProductId();
     const productUrl = window.location.href;
-    
+    const productTitle = extractProductTitle();
+
     // Sla op in localStorage voor purchase tracking
     try {
       localStorage.setItem('kp_product_id', productId || '');
       localStorage.setItem('kp_product_url', productUrl || '');
+      localStorage.setItem('kp_product_title', productTitle || ''); // NIEUW!
       localStorage.setItem('kp_view_timestamp', Date.now().toString());
     } catch (e) {
       console.warn('[KP Analytics] Failed to save to localStorage:', e);
@@ -217,23 +251,25 @@
     if (!hasUTMParameters()) {
       return;
     }
-    
+
     // Prevent double tracking
     if (window.productViewTracked) return;
-    
+
     const productId = extractProductId();
     const productUrl = window.location.href;
-    
+    const productTitle = extractProductTitle();
+
     // Track view event
     trackEvent({
       event: 'view',
       product_id: productId,
-      product_url: productUrl
+      product_url: productUrl,
+      product_title: productTitle  // NIEUW!
     });
-    
+
     // Sla info op in localStorage voor purchase tracking
     saveProductViewInfo();
-    
+
     window.productViewTracked = true;
   }
   
@@ -244,8 +280,9 @@
     try {
       const productId = localStorage.getItem('kp_product_id') || null;
       const productUrl = localStorage.getItem('kp_product_url') || null;
+      const productTitle = localStorage.getItem('kp_product_title') || null; // NIEUW!
       const viewTimestamp = localStorage.getItem('kp_view_timestamp');
-      
+
       // Check of view info niet ouder is dan 7 dagen
       if (viewTimestamp) {
         const viewTime = parseInt(viewTimestamp);
@@ -256,10 +293,11 @@
           return null;
         }
       }
-      
+
       return {
         product_id: productId,
-        product_url: productUrl
+        product_url: productUrl,
+        product_title: productTitle  // NIEUW!
       };
     } catch (e) {
       console.warn('[KP Analytics] Failed to read from localStorage:', e);
@@ -274,6 +312,7 @@
     try {
       localStorage.removeItem('kp_product_id');
       localStorage.removeItem('kp_product_url');
+      localStorage.removeItem('kp_product_title'); // NIEUW!
       localStorage.removeItem('kp_view_timestamp');
     } catch (e) {
       // Ignore
@@ -302,12 +341,14 @@
     // Gebruik opgeslagen info, of fallback naar huidige pagina
     const productId = storedInfo?.product_id || extractProductId();
     const productUrl = storedInfo?.product_url || window.location.href;
-    
+    const productTitle = storedInfo?.product_title || extractProductTitle();
+
     // Track purchase event
     trackEvent({
       event: 'purchase',
       product_id: productId,
       product_url: productUrl,
+      product_title: productTitle,  // NIEUW!
       order_total: orderTotal
     });
     
@@ -377,6 +418,7 @@
     trackProductView: trackProductView,
     trackPurchase: trackPurchase,
     extractProductId: extractProductId,
+    extractProductTitle: extractProductTitle,  // NIEUW!
     extractOrderTotal: extractOrderTotal
   };
   
