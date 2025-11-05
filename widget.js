@@ -484,9 +484,8 @@
         border-radius: 12px !important;
         padding: 1px !important;
         background: linear-gradient(90deg, 
-          #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700
+          #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
         ) !important;
-        background-size: 400% 100% !important;
         animation: kp-rainbow-border 3s linear infinite !important;
         -webkit-mask: 
           linear-gradient(#fff 0 0) content-box, 
@@ -502,10 +501,44 @@
       
       @keyframes kp-rainbow-border {
         0% { 
-          background-position: 0% 0%;
+          background: linear-gradient(90deg, 
+            #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
+          ) !important;
+        }
+        14.28% { 
+          background: linear-gradient(90deg, 
+            #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00
+          ) !important;
+        }
+        28.56% { 
+          background: linear-gradient(90deg, 
+            #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700
+          ) !important;
+        }
+        42.84% { 
+          background: linear-gradient(90deg, 
+            #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700, #32cd32
+          ) !important;
+        }
+        57.12% { 
+          background: linear-gradient(90deg, 
+            #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1
+          ) !important;
+        }
+        71.4% { 
+          background: linear-gradient(90deg, 
+            #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff
+          ) !important;
+        }
+        85.68% { 
+          background: linear-gradient(90deg, 
+            #8a2be2, #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2
+          ) !important;
         }
         100% { 
-          background-position: 400% 0%;
+          background: linear-gradient(90deg, 
+            #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
+          ) !important;
         }
       }
       
