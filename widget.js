@@ -22,13 +22,14 @@
     apiUrl: 'https://analytics.bluestars.app/api/content',
     rules: [
       // Rules kunnen later worden toegevoegd via API of local config
-      // Voorbeeld:
+      // 
+      // VOORBEELD: Injecteer banner in div met id="x"
       // {
-      //   selector: '#x',
-      //   condition: 'hasUTMParams',
-      //   html: '<div class="banner">...</div>',
-      //   css: '.banner { ... }',
-      //   js: 'console.log("injected");'
+      //   selector: '#x',  // CSS selector waar content geïnjecteerd wordt
+      //   condition: 'hasUTMParams',  // Alleen injecteren als UTM params aanwezig zijn
+      //   html: '<div class="kp-banner"><p>🎨 Vindt via AI chat!</p><a href="https://kunstpakket.ai">Bekijk AI chat</a></div>',
+      //   css: '.kp-banner { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 10px 0; } .kp-banner a { color: #0066cc; }',
+      //   js: 'console.log("Banner injected!");'
       // }
     ]
   };
