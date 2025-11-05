@@ -332,20 +332,12 @@
     if (window.purchaseTracked) return;
     window.purchaseTracked = true;
     
-    // Extract order_total (productprijs/orderwaarde) - VERPLICHT
-    const orderTotal = extractOrderTotal();
+    // order_total = productprijs (waarde van het gekozen product)
+    // Fallback naar 0 als niet gevonden (optioneel, maar altijd een nummer)
+    const orderTotal = extractOrderTotal() || 0;
     
-    // ⚠️ KRITIEK: Stop als order_total ontbreekt
-    if (orderTotal === null || orderTotal === undefined || orderTotal <= 0) {
-      console.error('[KP Analytics] ❌ Order total not found or invalid:', orderTotal);
-      console.warn('[KP Analytics] Purchase not tracked - order_total is required');
-      window.purchaseTracked = false; // Reset zodat we kunnen retry
-      return;
-    }
-    
-    // Bereken revenue (voor Bluestars) - VERPLICHT
-    // Vaste €10 per aankoop, of bereken op basis van order_total
-    const revenue = 10.00; // Of: orderTotal * 0.10 voor 10% van orderwaarde
+    // revenue = vaste €10 per aankoop (VERPLICHT)
+    const revenue = 10;
     
     // Haal product info op uit localStorage (van product view)
     const storedInfo = getStoredProductInfo();
@@ -368,8 +360,8 @@
       product_id: productId,
       product_url: productUrl,
       product_title: productTitle,
-      order_total: orderTotal,  // VERPLICHT: Productprijs/orderwaarde
-      revenue: revenue          // VERPLICHT: Revenue voor Bluestars
+      order_total: orderTotal,  // Productprijs (optioneel, min 0)
+      revenue: revenue  // Vaste €10 per aankoop
     });
     
     // Verwijder opgeslagen info na purchase
