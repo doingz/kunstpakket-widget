@@ -13,6 +13,33 @@
   const CLIENT_ID = 'kunstpakket.nl';
   
   /**
+   * FEATURE FLAG: Test Mode
+   * 
+   * Widget wordt alleen geladen als er `f=1` in de URL staat.
+   * Dit maakt het mogelijk om de widget te testen zonder dat deze live is voor alle gebruikers.
+   * 
+   * Gebruik: Voeg `?f=1` toe aan de URL om de widget te activeren
+   * Voorbeeld: https://www.kunstpakket.nl/product.html?f=1
+   * 
+   * Deze flag wordt opgeslagen in sessionStorage zodat deze actief blijft tijdens de hele sessie.
+   * Om de widget uit te schakelen: verwijder de parameter en refresh de pagina.
+   */
+  function isFeatureEnabled() {
+    // Check URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlFlag = urlParams.get('f');
+    
+    if (urlFlag === '1') {
+      // Sla op in sessionStorage voor de hele sessie
+      sessionStorage.setItem('kp_widget_enabled', 'true');
+      return true;
+    }
+    
+    // Check sessionStorage (blijft actief tijdens sessie)
+    return sessionStorage.getItem('kp_widget_enabled') === 'true';
+  }
+  
+  /**
    * Content Injection - Simple & Custom
    * Gebruik deze functie om HTML, CSS en JavaScript te injecteren
    * 
@@ -660,23 +687,29 @@
     }
   }
   
-  // Initialize on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-  
-  // Also check periodically (for dynamic content)
-  setInterval(() => {
-    if (isProductPage() && !window.productViewTracked) {
-      trackProductView();
+  // Initialize on page load - ALLEEN ALS FEATURE FLAG ACTIEF IS
+  if (isFeatureEnabled()) {
+    console.log('[KP Analytics] ✅ Widget enabled via feature flag (f=1)');
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
     }
     
-    if (isThankYouPage() && !window.purchaseTracked) {
-      trackPurchase();
-    }
-  }, 2000);
+    // Also check periodically (for dynamic content)
+    setInterval(() => {
+      if (isProductPage() && !window.productViewTracked) {
+        trackProductView();
+      }
+      
+      if (isThankYouPage() && !window.purchaseTracked) {
+        trackPurchase();
+      }
+    }, 2000);
+  } else {
+    console.log('[KP Analytics] ⏸️ Widget disabled - add ?f=1 to URL to enable');
+  }
   
   // Public API
   window.KunstpakketAnalytics = {
