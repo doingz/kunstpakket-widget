@@ -120,100 +120,25 @@
   }
   
   /**
-   * Extract product prijs uit URL parameter of pagina
-   * Gebruikt voor order_total bij purchase
-   * 
-   * PRIORITEIT:
-   * 1. URL parameter (price of utm_price) - ALTIJD AANWEZIG vanuit AI chatbot!
-   * 2. Product pagina DOM (fallback voor edge cases)
-   * 3. Data attributes (fallback)
-   * 4. JSON-LD structured data (fallback)
-   * 
-   * Voorbeeld URL: 
-   * ?utm_source=bluestars-ai-site&price=45.00
-   * of
-   * ?utm_source=bluestars-ai-site&utm_price=45.00
-   * 
-   * NOTE: Prijs wordt altijd als 'price' parameter meegestuurd vanuit AI chatbot!
+   * Extract order total uit pagina
    */
-  function extractProductPrice() {
-    // Optie 1: Uit URL parameter (ALTIJD AANWEZIG vanuit AI chatbot!)
-    // Ondersteunt beide: 'price' (aanbevolen) en 'utm_price' (alternatief)
+  function extractOrderTotal() {
+    // Optie 1: Uit URL parameter 'price' (aanbevolen - komt van Kunstpakket)
     const urlParams = new URLSearchParams(window.location.search);
-    const priceParam = urlParams.get('price') || urlParams.get('utm_price');
+    const priceParam = urlParams.get('price');
     if (priceParam) {
       const value = parseFloat(priceParam);
-      if (!isNaN(value) && value > 0) {
-        console.log('[KP Analytics] ✅ Product price from URL parameter:', value);
-        return value; // Meestal stoppen hier - price is altijd aanwezig!
-      }
-    }
-    
-    // Fallback: Als price parameter niet gevonden (edge case)
-    console.warn('[KP Analytics] ⚠️ Price parameter not found, trying page extraction...');
-    
-    // Optie 2: Uit product pagina (bij view)
-    // Zoek naar prijs op de pagina
-    const priceElements = document.querySelectorAll(
-      '[class*="price"]:not([class*="total"]), ' +
-      '[data-product-price], ' +
-      '.product-price, ' +
-      '[itemprop="price"]'
-    );
-    
-    for (const el of priceElements) {
-      const text = el.textContent || el.innerText;
-      // Match: €12,99 of €12.99 of 12,99 of 12.99
-      const match = text.match(/€?\s*(\d+[.,]\d{2})/);
-      if (match) {
-        const value = parseFloat(match[1].replace(',', '.'));
-        if (!isNaN(value) && value > 0) {
-          console.log('[KP Analytics] Product price from page:', value);
-          return value;
-        }
-      }
-    }
-    
-    // Optie 3: Uit data attribute
-    const priceEl = document.querySelector('[data-product-price]');
-    if (priceEl) {
-      const value = parseFloat(priceEl.getAttribute('data-product-price'));
       if (!isNaN(value) && value > 0) return value;
     }
     
-    // Optie 4: Uit JSON-LD structured data
-    try {
-      const jsonLd = document.querySelector('script[type="application/ld+json"]');
-      if (jsonLd) {
-        const data = JSON.parse(jsonLd.textContent);
-        if (data['@type'] === 'Product' && data.offers && data.offers.price) {
-          const value = parseFloat(data.offers.price);
-          if (!isNaN(value) && value > 0) return value;
-        }
-        if (data['@type'] === 'Product' && data.price) {
-          const value = parseFloat(data.price);
-          if (!isNaN(value) && value > 0) return value;
-        }
-      }
-    } catch (e) {
-      // Ignore
-    }
-    
-    return null;
-  }
-
-  /**
-   * Extract order total uit pagina (thank you pagina)
-   */
-  function extractOrderTotal() {
-    // Optie 1: Uit data attribute
+    // Optie 2: Uit data attribute
     const orderTotalEl = document.querySelector('[data-order-total]');
     if (orderTotalEl) {
       const value = parseFloat(orderTotalEl.getAttribute('data-order-total'));
       if (!isNaN(value) && value > 0) return value;
     }
     
-    // Optie 2: Uit text content (zoek naar prijs)
+    // Optie 3: Uit text content (zoek naar prijs)
     const priceElements = document.querySelectorAll('[class*="price"], [class*="total"], [id*="total"], [class*="amount"]');
     for (const el of priceElements) {
       const text = el.textContent || el.innerText;
@@ -225,7 +150,7 @@
       }
     }
     
-    // Optie 3: Uit JavaScript variabele
+    // Optie 4: Uit JavaScript variabele
     if (window.orderTotal) {
       const value = parseFloat(window.orderTotal);
       if (!isNaN(value) && value > 0) return value;
@@ -236,7 +161,7 @@
       if (!isNaN(value) && value > 0) return value;
     }
     
-    // Optie 4: Uit JSON-LD structured data
+    // Optie 5: Uit JSON-LD structured data
     try {
       const jsonLd = document.querySelector('script[type="application/ld+json"]');
       if (jsonLd) {
@@ -252,14 +177,6 @@
       }
     } catch (e) {
       // Ignore
-    }
-    
-    // Optie 5: Uit URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const total = urlParams.get('total') || urlParams.get('amount') || urlParams.get('price');
-    if (total) {
-      const value = parseFloat(total);
-      if (!isNaN(value) && value > 0) return value;
     }
     
     return null;
@@ -317,14 +234,12 @@
     const productId = extractProductId();
     const productUrl = window.location.href;
     const productTitle = extractProductTitle();
-    const productPrice = extractProductPrice(); // NIEUW: Productprijs
 
     // Sla op in localStorage voor purchase tracking
     try {
       localStorage.setItem('kp_product_id', productId || '');
       localStorage.setItem('kp_product_url', productUrl || '');
-      localStorage.setItem('kp_product_title', productTitle || '');
-      localStorage.setItem('kp_product_price', productPrice ? productPrice.toString() : ''); // NIEUW!
+      localStorage.setItem('kp_product_title', productTitle || ''); // NIEUW!
       localStorage.setItem('kp_view_timestamp', Date.now().toString());
     } catch (e) {
       console.warn('[KP Analytics] Failed to save to localStorage:', e);
@@ -369,8 +284,7 @@
     try {
       const productId = localStorage.getItem('kp_product_id') || null;
       const productUrl = localStorage.getItem('kp_product_url') || null;
-      const productTitle = localStorage.getItem('kp_product_title') || null;
-      const productPrice = localStorage.getItem('kp_product_price'); // NIEUW!
+      const productTitle = localStorage.getItem('kp_product_title') || null; // NIEUW!
       const viewTimestamp = localStorage.getItem('kp_view_timestamp');
 
       // Check of view info niet ouder is dan 7 dagen
@@ -387,8 +301,7 @@
       return {
         product_id: productId,
         product_url: productUrl,
-        product_title: productTitle,
-        product_price: productPrice ? parseFloat(productPrice) : null // NIEUW!
+        product_title: productTitle  // NIEUW!
       };
     } catch (e) {
       console.warn('[KP Analytics] Failed to read from localStorage:', e);
@@ -403,8 +316,7 @@
     try {
       localStorage.removeItem('kp_product_id');
       localStorage.removeItem('kp_product_url');
-      localStorage.removeItem('kp_product_title');
-      localStorage.removeItem('kp_product_price'); // NIEUW!
+      localStorage.removeItem('kp_product_title'); // NIEUW!
       localStorage.removeItem('kp_view_timestamp');
     } catch (e) {
       // Ignore
@@ -420,16 +332,23 @@
     if (window.purchaseTracked) return;
     window.purchaseTracked = true;
     
+    // Extract order_total (productprijs/orderwaarde) - VERPLICHT
+    const orderTotal = extractOrderTotal();
+    
+    // ⚠️ KRITIEK: Stop als order_total ontbreekt
+    if (orderTotal === null || orderTotal === undefined || orderTotal <= 0) {
+      console.error('[KP Analytics] ❌ Order total not found or invalid:', orderTotal);
+      console.warn('[KP Analytics] Purchase not tracked - order_total is required');
+      window.purchaseTracked = false; // Reset zodat we kunnen retry
+      return;
+    }
+    
+    // Bereken revenue (voor Bluestars) - VERPLICHT
+    // Vaste €10 per aankoop, of bereken op basis van order_total
+    const revenue = 10.00; // Of: orderTotal * 0.10 voor 10% van orderwaarde
+    
     // Haal product info op uit localStorage (van product view)
     const storedInfo = getStoredProductInfo();
-    
-    // order_total = productprijs waar user binnenkwam
-    // Prioriteit: 1) Opgeslagen prijs van product view, 2) Order total van thank you pagina, 3) 0
-    const orderTotal = storedInfo?.product_price || extractOrderTotal() || 0;
-    
-    // revenue = VASTE €10 per aankoop (ALTIJD 10, NIET AANPASBAAR!)
-    // Dit is de vaste fee voor Bluestars per aankoop, onafhankelijk van order_total
-    const revenue = 10;
     
     // Gebruik opgeslagen info, of fallback naar huidige pagina
     const productId = storedInfo?.product_id || extractProductId();
@@ -449,8 +368,8 @@
       product_id: productId,
       product_url: productUrl,
       product_title: productTitle,
-      order_total: orderTotal,  // Productprijs (optioneel, min 0)
-      revenue: revenue  // Vaste €10 per aankoop
+      order_total: orderTotal,  // VERPLICHT: Productprijs/orderwaarde
+      revenue: revenue          // VERPLICHT: Revenue voor Bluestars
     });
     
     // Verwijder opgeslagen info na purchase
@@ -519,8 +438,7 @@
     trackProductView: trackProductView,
     trackPurchase: trackPurchase,
     extractProductId: extractProductId,
-    extractProductTitle: extractProductTitle,
-    extractProductPrice: extractProductPrice,  // NIEUW!
+    extractProductTitle: extractProductTitle,  // NIEUW!
     extractOrderTotal: extractOrderTotal
   };
   
