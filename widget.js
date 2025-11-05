@@ -120,33 +120,37 @@
   }
   
   /**
-   * Extract product prijs uit UTM parameter of pagina
+   * Extract product prijs uit URL parameter of pagina
    * Gebruikt voor order_total bij purchase
    * 
    * PRIORITEIT:
-   * 1. UTM parameter (utm_price of price) - ALTIJD AANWEZIG!
+   * 1. URL parameter (price of utm_price) - ALTIJD AANWEZIG vanuit AI chatbot!
    * 2. Product pagina DOM (fallback voor edge cases)
    * 3. Data attributes (fallback)
    * 4. JSON-LD structured data (fallback)
    * 
-   * Voorbeeld UTM: ?utm_source=bluestars-ai-site&utm_price=99.99
+   * Voorbeeld URL: 
+   * ?utm_source=bluestars-ai-site&price=45.00
+   * of
+   * ?utm_source=bluestars-ai-site&utm_price=45.00
    * 
-   * NOTE: Prijs wordt altijd in UTM parameter meegestuurd vanuit AI chatbot!
+   * NOTE: Prijs wordt altijd als 'price' parameter meegestuurd vanuit AI chatbot!
    */
   function extractProductPrice() {
-    // Optie 1: Uit UTM parameter (ALTIJD AANWEZIG vanuit AI chatbot!)
+    // Optie 1: Uit URL parameter (ALTIJD AANWEZIG vanuit AI chatbot!)
+    // Ondersteunt beide: 'price' (aanbevolen) en 'utm_price' (alternatief)
     const urlParams = new URLSearchParams(window.location.search);
-    const utmPrice = urlParams.get('utm_price') || urlParams.get('price');
-    if (utmPrice) {
-      const value = parseFloat(utmPrice);
+    const priceParam = urlParams.get('price') || urlParams.get('utm_price');
+    if (priceParam) {
+      const value = parseFloat(priceParam);
       if (!isNaN(value) && value > 0) {
-        console.log('[KP Analytics] ✅ Product price from UTM parameter:', value);
-        return value; // Meestal stoppen hier - UTM is altijd aanwezig!
+        console.log('[KP Analytics] ✅ Product price from URL parameter:', value);
+        return value; // Meestal stoppen hier - price is altijd aanwezig!
       }
     }
     
-    // Fallback: Als UTM prijs niet gevonden (edge case)
-    console.warn('[KP Analytics] ⚠️ UTM price not found, trying page extraction...');
+    // Fallback: Als price parameter niet gevonden (edge case)
+    console.warn('[KP Analytics] ⚠️ Price parameter not found, trying page extraction...');
     
     // Optie 2: Uit product pagina (bij view)
     // Zoek naar prijs op de pagina
