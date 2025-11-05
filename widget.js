@@ -124,24 +124,29 @@
    * Gebruikt voor order_total bij purchase
    * 
    * PRIORITEIT:
-   * 1. UTM parameter (utm_price of price) - AANBEVOLEN!
-   * 2. Product pagina DOM
-   * 3. Data attributes
-   * 4. JSON-LD structured data
+   * 1. UTM parameter (utm_price of price) - ALTIJD AANWEZIG!
+   * 2. Product pagina DOM (fallback voor edge cases)
+   * 3. Data attributes (fallback)
+   * 4. JSON-LD structured data (fallback)
    * 
    * Voorbeeld UTM: ?utm_source=bluestars-ai-site&utm_price=99.99
+   * 
+   * NOTE: Prijs wordt altijd in UTM parameter meegestuurd vanuit AI chatbot!
    */
   function extractProductPrice() {
-    // Optie 1: Uit UTM parameter (PRIORITEIT - als je het in de link zet)
+    // Optie 1: Uit UTM parameter (ALTIJD AANWEZIG vanuit AI chatbot!)
     const urlParams = new URLSearchParams(window.location.search);
     const utmPrice = urlParams.get('utm_price') || urlParams.get('price');
     if (utmPrice) {
       const value = parseFloat(utmPrice);
       if (!isNaN(value) && value > 0) {
         console.log('[KP Analytics] ✅ Product price from UTM parameter:', value);
-        return value; // Stoppen hier - UTM heeft prioriteit!
+        return value; // Meestal stoppen hier - UTM is altijd aanwezig!
       }
     }
+    
+    // Fallback: Als UTM prijs niet gevonden (edge case)
+    console.warn('[KP Analytics] ⚠️ UTM price not found, trying page extraction...');
     
     // Optie 2: Uit product pagina (bij view)
     // Zoek naar prijs op de pagina
