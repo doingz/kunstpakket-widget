@@ -449,6 +449,7 @@
    * LOS VAN ANALYTICS - Banner wordt altijd getoond
    */
   function injectAIBanner() {
+    console.log('[KP Analytics] 🎨 Attempting to inject AI banner...');
     
     const aiBannerHTML = `
       <div class="kp-ai-banner">
@@ -525,7 +526,24 @@
       }
     `;
     
-    injectContent('.container-bar', aiBannerHTML, aiBannerCSS);
+    // Probeer meerdere selectors (in geval .container-bar niet bestaat)
+    const selectors = ['.container-bar', 'body', 'main', '.main-content', '#main'];
+    
+    let injected = false;
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        console.log('[KP Analytics] ✅ Found element:', selector);
+        injectContent(selector, aiBannerHTML, aiBannerCSS);
+        injected = true;
+        break;
+      }
+    }
+    
+    if (!injected) {
+      console.warn('[KP Analytics] ⚠️ No suitable container found. Trying again in 2 seconds...');
+      setTimeout(() => injectAIBanner(), 2000);
+    }
   }
   
   /**
