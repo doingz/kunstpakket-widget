@@ -473,9 +473,13 @@
   
   /**
    * Injecteer AI banner in .container-bar
-   * LOS VAN ANALYTICS - Banner wordt altijd getoond
+   * LOS VAN ANALYTICS - Banner wordt alleen getoond als feature flag actief is
    */
   function injectAIBanner() {
+    // Check feature flag
+    if (!isFeatureEnabled()) {
+      return;
+    }
     const aiBannerHTML = `
       <div class="kp-ai-banner">
         <div class="kp-ai-banner-content">
@@ -590,6 +594,11 @@
    * @param {number} retries - Aantal keer proberen als element niet gevonden wordt (default: 10)
    */
   function injectContent(selector, html, css, js, retries = 10) {
+    // Check feature flag
+    if (!isFeatureEnabled()) {
+      console.log('[KP Analytics] ⏸️ Content injection disabled - add ?f=1 to URL to enable');
+      return;
+    }
     const tryInject = (attempt = 0) => {
       const element = document.querySelector(selector);
       
