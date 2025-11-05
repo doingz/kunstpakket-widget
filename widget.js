@@ -567,7 +567,8 @@
         const wrapper = document.createElement('div');
         wrapper.setAttribute('data-kp-injected', injectId);
         wrapper.innerHTML = html;
-        element.appendChild(wrapper);
+        // Injecteer aan het begin van het element (prepend)
+        element.insertBefore(wrapper, element.firstChild);
       }
       
       // Injecteer CSS
@@ -613,7 +614,7 @@
       trackPurchase();
     }
     
-    // Inject AI banner in .container-bar (alleen bij UTM params)
+    // Inject AI banner in .container-bar (altijd)
     injectAIBanner();
     
     // Listen for URL changes (SPA support)
