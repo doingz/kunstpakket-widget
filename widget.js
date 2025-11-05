@@ -332,12 +332,11 @@
     if (window.purchaseTracked) return;
     window.purchaseTracked = true;
     
+    // order_total = productprijs (waarde van het gekozen product)
     const orderTotal = extractOrderTotal();
     
-    if (!orderTotal || orderTotal <= 0) {
-      console.warn('[KP Analytics] Order total not found, purchase not tracked');
-      return;
-    }
+    // revenue = vaste €10 per aankoop
+    const revenue = 10;
     
     // Haal product info op uit localStorage (van product view)
     const storedInfo = getStoredProductInfo();
@@ -352,8 +351,9 @@
       event: 'purchase',
       product_id: productId,
       product_url: productUrl,
-      product_title: productTitle,  // NIEUW!
-      order_total: orderTotal
+      product_title: productTitle,
+      order_total: orderTotal || null,  // Productprijs (optioneel)
+      revenue: revenue  // Vaste €10 per aankoop
     });
     
     // Verwijder opgeslagen info na purchase
