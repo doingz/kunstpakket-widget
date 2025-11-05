@@ -333,7 +333,8 @@
     window.purchaseTracked = true;
     
     // order_total = productprijs (waarde van het gekozen product)
-    const orderTotal = extractOrderTotal();
+    // Fallback naar 0 als niet gevonden (API vereist een nummer)
+    const orderTotal = extractOrderTotal() || 0;
     
     // revenue = vaste €10 per aankoop
     const revenue = 10;
@@ -352,7 +353,7 @@
       product_id: productId,
       product_url: productUrl,
       product_title: productTitle,
-      order_total: orderTotal || null,  // Productprijs (optioneel)
+      order_total: orderTotal,  // Productprijs (altijd een nummer, min 0)
       revenue: revenue  // Vaste €10 per aankoop
     });
     
