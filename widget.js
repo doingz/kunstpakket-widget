@@ -204,19 +204,18 @@
    * Check of we op thank you pagina zijn
    */
   function isThankYouPage() {
-    const url = window.location.href.toLowerCase();
     const path = window.location.pathname.toLowerCase();
     const search = window.location.search.toLowerCase();
     const title = document.title.toLowerCase();
 
-    return url.includes('thankyou') ||
-           path.includes('/thank-you') ||
+    return path.includes('/thank-you') ||
            path.includes('/thankyou') ||
            path.includes('/bedankt') ||
            path.includes('/order-success') ||
            path.includes('/bestelling-bevestigd') ||
            search.includes('order=success') ||
            search.includes('status=success') ||
+           search.includes('thankyou') ||
            search.includes('bedankt') ||
            title.includes('bedankt') ||
            title.includes('thank you') ||
