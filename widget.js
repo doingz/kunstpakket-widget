@@ -486,9 +486,21 @@
       }
       
       @keyframes kp-rainbow-border {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        0% { 
+          background-position: 0% 50%;
+        }
+        25% {
+          background-position: 100% 50%;
+        }
+        50% {
+          background-position: 100% 0%;
+        }
+        75% {
+          background-position: 0% 100%;
+        }
+        100% { 
+          background-position: 0% 50%;
+        }
       }
       
       .kp-ai-banner-content {
@@ -497,15 +509,17 @@
         padding: 14px !important;
         display: flex !important;
         align-items: center !important;
+        justify-content: center !important;
         gap: 12px !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
       }
       
       .kp-ai-text {
         font-size: 16px !important;
-        font-weight: 600 !important;
+        font-weight: normal !important;
         color: #333 !important;
         line-height: 1.4 !important;
+        text-align: center !important;
       }
       
       .kp-ai-link {
