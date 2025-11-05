@@ -449,7 +449,7 @@
    * LOS VAN ANALYTICS - Banner wordt altijd getoond
    */
   function injectAIBanner() {
-    console.log('[KP Analytics] 🎨 Attempting to inject AI banner...');
+    console.log('[KP Analytics] 🎨 Attempting to inject AI banner into .container-bar...');
     
     const aiBannerHTML = `
       <div class="kp-ai-banner">
@@ -526,24 +526,19 @@
       }
     `;
     
-    // Probeer meerdere selectors (in geval .container-bar niet bestaat)
-    const selectors = ['.container-bar', 'body', 'main', '.main-content', '#main'];
+    // Injecteer direct in .container-bar met meer retries (20x = 10 seconden)
+    injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 20);
     
-    let injected = false;
-    for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log('[KP Analytics] ✅ Found element:', selector);
-        injectContent(selector, aiBannerHTML, aiBannerCSS);
-        injected = true;
-        break;
-      }
-    }
+    // Ook na 1 en 3 seconden proberen (voor dynamische content)
+    setTimeout(() => {
+      console.log('[KP Analytics] 🎨 Retry 1: Injecting AI banner...');
+      injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 5);
+    }, 1000);
     
-    if (!injected) {
-      console.warn('[KP Analytics] ⚠️ No suitable container found. Trying again in 2 seconds...');
-      setTimeout(() => injectAIBanner(), 2000);
-    }
+    setTimeout(() => {
+      console.log('[KP Analytics] 🎨 Retry 2: Injecting AI banner...');
+      injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 5);
+    }, 3000);
   }
   
   /**
@@ -562,12 +557,17 @@
       
       if (!element) {
         if (attempt < retries) {
+          if (attempt === 0 || attempt % 5 === 0) {
+            console.log(`[KP Analytics] Waiting for ${selector}... (attempt ${attempt + 1}/${retries})`);
+          }
           setTimeout(() => tryInject(attempt + 1), 500);
           return;
         }
-        console.warn('[KP Analytics] Element not found:', selector);
+        console.warn(`[KP Analytics] ❌ Element not found after ${retries} attempts:`, selector);
         return;
       }
+      
+      console.log(`[KP Analytics] ✅ Element found: ${selector}`, element);
       
       // Check of al geïnjecteerd
       const injectId = `kp-injected-${selector.replace(/[^a-zA-Z0-9]/g, '-')}`;
@@ -582,7 +582,7 @@
         wrapper.setAttribute('data-kp-injected', injectId);
         wrapper.innerHTML = html;
         element.appendChild(wrapper);
-        console.log('[KP Analytics] ✅ HTML injected into:', selector);
+        console.log('[KP Analytics] ✅ HTML injected into:', selector, wrapper);
       }
       
       // Injecteer CSS
