@@ -478,6 +478,10 @@
         box-sizing: border-box !important;
       }
       
+      [data-kp-injected="kp-injected--container-bar"] {
+        padding: 15px !important;
+      }
+      
       @keyframes kp-rainbow-border {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
