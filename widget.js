@@ -483,17 +483,10 @@
         inset: 0 !important;
         border-radius: 12px !important;
         padding: 1px !important;
-        background: conic-gradient(
-          from 0deg,
-          #ff0080,
-          #ff8c00,
-          #ffd700,
-          #32cd32,
-          #00ced1,
-          #1e90ff,
-          #8a2be2,
-          #ff0080
+        background: linear-gradient(90deg, 
+          #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080, #ff8c00, #ffd700
         ) !important;
+        background-size: 400% 100% !important;
         animation: kp-rainbow-border 3s linear infinite !important;
         -webkit-mask: 
           linear-gradient(#fff 0 0) content-box, 
@@ -509,10 +502,10 @@
       
       @keyframes kp-rainbow-border {
         0% { 
-          transform: rotate(0deg);
+          background-position: 0% 0%;
         }
         100% { 
-          transform: rotate(360deg);
+          background-position: 400% 0%;
         }
       }
       
