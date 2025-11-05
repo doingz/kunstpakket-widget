@@ -452,7 +452,7 @@
     const aiBannerHTML = `
       <div class="kp-ai-banner">
         <div class="kp-ai-banner-content">
-          <span class="kp-ai-text">ai Cadeau tips? <a href="https://kunstpakket.ai" target="_blank" class="kp-ai-link">Klik hier</a></span>
+          <span class="kp-ai-text">Cadeautips van Frederique AI</span>
         </div>
       </div>
     `;
