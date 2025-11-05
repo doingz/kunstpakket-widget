@@ -459,6 +459,10 @@
     `;
     
     const aiBannerCSS = `
+      .container-bar {
+        padding: 0 !important;
+      }
+      
       .kp-ai-banner {
         position: relative !important;
         margin: 15px 0 !important;
