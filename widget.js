@@ -120,7 +120,81 @@
   }
   
   /**
-   * Extract order total uit pagina
+   * Extract product prijs uit UTM parameter of pagina
+   * Gebruikt voor order_total bij purchase
+   * 
+   * PRIORITEIT:
+   * 1. UTM parameter (utm_price of price) - AANBEVOLEN!
+   * 2. Product pagina DOM
+   * 3. Data attributes
+   * 4. JSON-LD structured data
+   * 
+   * Voorbeeld UTM: ?utm_source=bluestars-ai-site&utm_price=99.99
+   */
+  function extractProductPrice() {
+    // Optie 1: Uit UTM parameter (PRIORITEIT - als je het in de link zet)
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmPrice = urlParams.get('utm_price') || urlParams.get('price');
+    if (utmPrice) {
+      const value = parseFloat(utmPrice);
+      if (!isNaN(value) && value > 0) {
+        console.log('[KP Analytics] ✅ Product price from UTM parameter:', value);
+        return value; // Stoppen hier - UTM heeft prioriteit!
+      }
+    }
+    
+    // Optie 2: Uit product pagina (bij view)
+    // Zoek naar prijs op de pagina
+    const priceElements = document.querySelectorAll(
+      '[class*="price"]:not([class*="total"]), ' +
+      '[data-product-price], ' +
+      '.product-price, ' +
+      '[itemprop="price"]'
+    );
+    
+    for (const el of priceElements) {
+      const text = el.textContent || el.innerText;
+      // Match: €12,99 of €12.99 of 12,99 of 12.99
+      const match = text.match(/€?\s*(\d+[.,]\d{2})/);
+      if (match) {
+        const value = parseFloat(match[1].replace(',', '.'));
+        if (!isNaN(value) && value > 0) {
+          console.log('[KP Analytics] Product price from page:', value);
+          return value;
+        }
+      }
+    }
+    
+    // Optie 3: Uit data attribute
+    const priceEl = document.querySelector('[data-product-price]');
+    if (priceEl) {
+      const value = parseFloat(priceEl.getAttribute('data-product-price'));
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    // Optie 4: Uit JSON-LD structured data
+    try {
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      if (jsonLd) {
+        const data = JSON.parse(jsonLd.textContent);
+        if (data['@type'] === 'Product' && data.offers && data.offers.price) {
+          const value = parseFloat(data.offers.price);
+          if (!isNaN(value) && value > 0) return value;
+        }
+        if (data['@type'] === 'Product' && data.price) {
+          const value = parseFloat(data.price);
+          if (!isNaN(value) && value > 0) return value;
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract order total uit pagina (thank you pagina)
    */
   function extractOrderTotal() {
     // Optie 1: Uit data attribute
@@ -234,12 +308,14 @@
     const productId = extractProductId();
     const productUrl = window.location.href;
     const productTitle = extractProductTitle();
+    const productPrice = extractProductPrice(); // NIEUW: Productprijs
 
     // Sla op in localStorage voor purchase tracking
     try {
       localStorage.setItem('kp_product_id', productId || '');
       localStorage.setItem('kp_product_url', productUrl || '');
-      localStorage.setItem('kp_product_title', productTitle || ''); // NIEUW!
+      localStorage.setItem('kp_product_title', productTitle || '');
+      localStorage.setItem('kp_product_price', productPrice ? productPrice.toString() : ''); // NIEUW!
       localStorage.setItem('kp_view_timestamp', Date.now().toString());
     } catch (e) {
       console.warn('[KP Analytics] Failed to save to localStorage:', e);
@@ -284,7 +360,8 @@
     try {
       const productId = localStorage.getItem('kp_product_id') || null;
       const productUrl = localStorage.getItem('kp_product_url') || null;
-      const productTitle = localStorage.getItem('kp_product_title') || null; // NIEUW!
+      const productTitle = localStorage.getItem('kp_product_title') || null;
+      const productPrice = localStorage.getItem('kp_product_price'); // NIEUW!
       const viewTimestamp = localStorage.getItem('kp_view_timestamp');
 
       // Check of view info niet ouder is dan 7 dagen
@@ -301,7 +378,8 @@
       return {
         product_id: productId,
         product_url: productUrl,
-        product_title: productTitle  // NIEUW!
+        product_title: productTitle,
+        product_price: productPrice ? parseFloat(productPrice) : null // NIEUW!
       };
     } catch (e) {
       console.warn('[KP Analytics] Failed to read from localStorage:', e);
@@ -316,7 +394,8 @@
     try {
       localStorage.removeItem('kp_product_id');
       localStorage.removeItem('kp_product_url');
-      localStorage.removeItem('kp_product_title'); // NIEUW!
+      localStorage.removeItem('kp_product_title');
+      localStorage.removeItem('kp_product_price'); // NIEUW!
       localStorage.removeItem('kp_view_timestamp');
     } catch (e) {
       // Ignore
@@ -332,15 +411,15 @@
     if (window.purchaseTracked) return;
     window.purchaseTracked = true;
     
-    // order_total = productprijs (waarde van het gekozen product)
-    // Fallback naar 0 als niet gevonden (optioneel, maar altijd een nummer)
-    const orderTotal = extractOrderTotal() || 0;
+    // Haal product info op uit localStorage (van product view)
+    const storedInfo = getStoredProductInfo();
+    
+    // order_total = productprijs waar user binnenkwam
+    // Prioriteit: 1) Opgeslagen prijs van product view, 2) Order total van thank you pagina, 3) 0
+    const orderTotal = storedInfo?.product_price || extractOrderTotal() || 0;
     
     // revenue = vaste €10 per aankoop (VERPLICHT)
     const revenue = 10;
-    
-    // Haal product info op uit localStorage (van product view)
-    const storedInfo = getStoredProductInfo();
     
     // Gebruik opgeslagen info, of fallback naar huidige pagina
     const productId = storedInfo?.product_id || extractProductId();
@@ -430,7 +509,8 @@
     trackProductView: trackProductView,
     trackPurchase: trackPurchase,
     extractProductId: extractProductId,
-    extractProductTitle: extractProductTitle,  // NIEUW!
+    extractProductTitle: extractProductTitle,
+    extractProductPrice: extractProductPrice,  // NIEUW!
     extractOrderTotal: extractOrderTotal
   };
   
