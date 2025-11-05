@@ -445,6 +445,90 @@
   }
   
   /**
+   * Injecteer AI banner in .container-bar
+   * LOS VAN ANALYTICS - Banner wordt altijd getoond
+   */
+  function injectAIBanner() {
+    
+    const aiBannerHTML = `
+      <div class="kp-ai-banner">
+        <div class="kp-ai-banner-content">
+          <span class="kp-ai-icon">✨</span>
+          <span class="kp-ai-text">ai Cadeau tips? <a href="https://kunstpakket.ai" target="_blank" class="kp-ai-link">Klik hier</a></span>
+        </div>
+      </div>
+    `;
+    
+    const aiBannerCSS = `
+      .kp-ai-banner {
+        position: relative;
+        margin: 15px 0;
+        padding: 3px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, 
+          #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
+        );
+        background-size: 400% 400%;
+        animation: kp-rainbow-border 3s linear infinite;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      
+      @keyframes kp-rainbow-border {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      .kp-ai-banner-content {
+        background: white;
+        border-radius: 10px;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+      
+      .kp-ai-icon {
+        font-size: 24px;
+        animation: kp-sparkle 2s ease-in-out infinite;
+      }
+      
+      @keyframes kp-sparkle {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.2) rotate(180deg); }
+      }
+      
+      .kp-ai-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.4;
+      }
+      
+      .kp-ai-link {
+        color: #0066cc;
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid transparent;
+      }
+      
+      .kp-ai-link:hover {
+        color: #0052a3;
+        border-bottom-color: #0052a3;
+        transform: translateY(-1px);
+      }
+      
+      .kp-ai-link:active {
+        transform: translateY(0);
+      }
+    `;
+    
+    injectContent('.container-bar', aiBannerHTML, aiBannerCSS);
+  }
+  
+  /**
    * Content Injection - Simple & Custom
    * Injecteert HTML, CSS en JavaScript in een element
    * 
@@ -528,8 +612,8 @@
       trackPurchase();
     }
     
-    // Content injection kan handmatig worden aangeroepen via:
-    // window.KunstpakketAnalytics.injectContent('#selector', html, css, js)
+    // Inject AI banner in .container-bar (alleen bij UTM params)
+    injectAIBanner();
     
     // Listen for URL changes (SPA support)
     if (window.history && window.history.pushState) {
@@ -549,7 +633,8 @@
             trackPurchase();
           }
           
-          // Content injection kan handmatig worden aangeroepen bij SPA navigatie
+          // Re-inject AI banner bij SPA navigatie
+          injectAIBanner();
         }, 100);
       };
     }
