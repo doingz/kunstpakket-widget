@@ -13,6 +13,27 @@
   const CLIENT_ID = 'kunstpakket.nl';
   
   /**
+   * Content Injection Configuration
+   * Flexibel systeem voor het injecteren van HTML, CSS en JavaScript op Kunstpakket pagina's
+   */
+  const CONTENT_CONFIG = {
+    enabled: true,
+    source: 'api', // 'api' of 'local'
+    apiUrl: 'https://analytics.bluestars.app/api/content',
+    rules: [
+      // Rules kunnen later worden toegevoegd via API of local config
+      // Voorbeeld:
+      // {
+      //   selector: '#x',
+      //   condition: 'hasUTMParams',
+      //   html: '<div class="banner">...</div>',
+      //   css: '.banner { ... }',
+      //   js: 'console.log("injected");'
+      // }
+    ]
+  };
+  
+  /**
    * Track event naar analytics API
    */
   async function trackEvent(eventData) {
@@ -437,6 +458,217 @@
   }
   
   /**
+   * Content Injection System
+   * Injecteert HTML, CSS en JavaScript content op Kunstpakket pagina's
+   */
+  
+  /**
+   * Check of content geïnjecteerd moet worden op basis van rule condition
+   */
+  function shouldInject(rule) {
+    if (!rule.condition) {
+      return true; // Geen condition = altijd injecteren
+    }
+    
+    switch (rule.condition) {
+      case 'hasUTMParams':
+        return hasUTMParameters();
+      case 'isProductPage':
+        return isProductPage();
+      case 'isThankYouPage':
+        return isThankYouPage();
+      case 'always':
+        return true;
+      default:
+        // Custom condition function
+        if (typeof rule.condition === 'function') {
+          return rule.condition();
+        }
+        return false;
+    }
+  }
+  
+  /**
+   * Wacht tot element bestaat in DOM (retry mechanism)
+   */
+  function waitForElement(selector, maxRetries = 10, interval = 500) {
+    return new Promise((resolve, reject) => {
+      let retries = 0;
+      
+      const checkElement = () => {
+        const element = document.querySelector(selector);
+        if (element) {
+          resolve(element);
+        } else if (retries < maxRetries) {
+          retries++;
+          setTimeout(checkElement, interval);
+        } else {
+          reject(new Error(`Element not found: ${selector}`));
+        }
+      };
+      
+      checkElement();
+    });
+  }
+  
+  /**
+   * Injecteert CSS styling in head
+   */
+  function injectCSS(css, id) {
+    if (!css) return;
+    
+    // Check of style al bestaat
+    const existingStyle = document.getElementById(id || 'kp-injected-style');
+    if (existingStyle) {
+      existingStyle.textContent = css;
+      return;
+    }
+    
+    // Maak nieuwe style tag
+    const style = document.createElement('style');
+    style.id = id || 'kp-injected-style';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+  
+  /**
+   * Voert JavaScript code uit
+   */
+  function injectJS(js) {
+    if (!js) return;
+    
+    try {
+      // Eval in isolated context (veiliger)
+      const script = document.createElement('script');
+      script.textContent = js;
+      document.head.appendChild(script);
+    } catch (err) {
+      console.error('[KP Analytics] JavaScript injection error:', err);
+    }
+  }
+  
+  /**
+   * Injecteert content in target element
+   */
+  async function injectContent(rule) {
+    try {
+      // Check condition
+      if (!shouldInject(rule)) {
+        console.log('[KP Analytics] Content injection skipped:', rule.selector, '- condition not met');
+        return;
+      }
+      
+      // Wacht tot element bestaat
+      const targetElement = await waitForElement(rule.selector);
+      
+      // Check of al geïnjecteerd (voorkom dubbele injectie)
+      const injectId = `kp-injected-${rule.selector.replace(/[^a-zA-Z0-9]/g, '-')}`;
+      if (targetElement.querySelector(`[data-kp-injected="${injectId}"]`)) {
+        console.log('[KP Analytics] Content already injected:', rule.selector);
+        return;
+      }
+      
+      // Injecteer HTML
+      if (rule.html) {
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('data-kp-injected', injectId);
+        wrapper.innerHTML = rule.html;
+        targetElement.appendChild(wrapper);
+        console.log('[KP Analytics] ✅ HTML injected into:', rule.selector);
+      }
+      
+      // Injecteer CSS
+      if (rule.css) {
+        const cssId = `kp-style-${rule.selector.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        injectCSS(rule.css, cssId);
+        console.log('[KP Analytics] ✅ CSS injected for:', rule.selector);
+      }
+      
+      // Injecteer JavaScript
+      if (rule.js) {
+        injectJS(rule.js);
+        console.log('[KP Analytics] ✅ JavaScript injected for:', rule.selector);
+      }
+      
+    } catch (err) {
+      console.warn('[KP Analytics] Content injection failed:', rule.selector, err.message);
+    }
+  }
+  
+  /**
+   * Laad content configuratie van API of gebruik local config
+   */
+  async function loadContentConfig() {
+    if (!CONTENT_CONFIG.enabled) {
+      return CONTENT_CONFIG.rules;
+    }
+    
+    if (CONTENT_CONFIG.source === 'api') {
+      try {
+        const response = await fetch(CONTENT_CONFIG.apiUrl, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.rules && Array.isArray(data.rules)) {
+            console.log('[KP Analytics] Content config loaded from API:', data.rules.length, 'rules');
+            return data.rules;
+          }
+        }
+      } catch (err) {
+        console.warn('[KP Analytics] Failed to load content config from API:', err.message);
+      }
+    }
+    
+    // Fallback naar local config
+    return CONTENT_CONFIG.rules;
+  }
+  
+  /**
+   * Initialiseer content injection
+   */
+  async function initContentInjection() {
+    if (!CONTENT_CONFIG.enabled) {
+      return;
+    }
+    
+    try {
+      const rules = await loadContentConfig();
+      
+      if (!rules || rules.length === 0) {
+        console.log('[KP Analytics] No content injection rules found');
+        return;
+      }
+      
+      // Injecteer alle rules
+      for (const rule of rules) {
+        if (!rule.selector) {
+          console.warn('[KP Analytics] Content rule missing selector:', rule);
+          continue;
+        }
+        
+        // Probeer direct te injecteren
+        await injectContent(rule);
+      }
+      
+      // Retry mechanism voor dynamische content (na 2 seconden)
+      setTimeout(async () => {
+        for (const rule of rules) {
+          if (rule.selector && !document.querySelector(`${rule.selector} [data-kp-injected]`)) {
+            await injectContent(rule);
+          }
+        }
+      }, 2000);
+      
+    } catch (err) {
+      console.error('[KP Analytics] Content injection init error:', err);
+    }
+  }
+  
+  /**
    * Initialize tracking
    */
   function init() {
@@ -451,6 +683,9 @@
     if (isThankYouPage()) {
       trackPurchase();
     }
+    
+    // Initialize content injection
+    initContentInjection();
     
     // Listen for URL changes (SPA support)
     if (window.history && window.history.pushState) {
@@ -469,6 +704,9 @@
           if (isThankYouPage()) {
             trackPurchase();
           }
+          
+          // Re-initialize content injection for new page
+          initContentInjection();
         }, 100);
       };
     }
@@ -492,14 +730,29 @@
     }
   }, 2000);
   
+  /**
+   * Public API helper: Inject content manually
+   */
+  function injectContentManual(selector, html, css, js) {
+    return injectContent({
+      selector: selector,
+      html: html,
+      css: css,
+      js: js,
+      condition: 'always'
+    });
+  }
+  
   // Public API
   window.KunstpakketAnalytics = {
     version: VERSION,
     trackProductView: trackProductView,
     trackPurchase: trackPurchase,
     extractProductId: extractProductId,
-    extractProductTitle: extractProductTitle,  // NIEUW!
-    extractOrderTotal: extractOrderTotal
+    extractProductTitle: extractProductTitle,
+    extractOrderTotal: extractOrderTotal,
+    injectContent: injectContentManual,  // NIEUW: Content injection API
+    initContentInjection: initContentInjection  // NIEUW: Re-initialize content injection
   };
   
 })();
