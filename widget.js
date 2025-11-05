@@ -449,8 +449,6 @@
    * LOS VAN ANALYTICS - Banner wordt altijd getoond
    */
   function injectAIBanner() {
-    console.log('[KP Analytics] 🎨 Attempting to inject AI banner into .container-bar...');
-    
     const aiBannerHTML = `
       <div class="kp-ai-banner">
         <div class="kp-ai-banner-content">
@@ -462,16 +460,22 @@
     
     const aiBannerCSS = `
       .kp-ai-banner {
-        position: relative;
-        margin: 15px 0;
-        padding: 3px;
-        border-radius: 12px;
+        position: relative !important;
+        margin: 15px 0 !important;
+        padding: 3px !important;
+        border-radius: 12px !important;
         background: linear-gradient(90deg, 
           #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
-        );
-        background-size: 400% 400%;
-        animation: kp-rainbow-border 3s linear infinite;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        ) !important;
+        background-size: 400% 400% !important;
+        animation: kp-rainbow-border 3s linear infinite !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 9999 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
       }
       
       @keyframes kp-rainbow-border {
@@ -481,18 +485,19 @@
       }
       
       .kp-ai-banner-content {
-        background: white;
-        border-radius: 10px;
-        padding: 15px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: white !important;
+        border-radius: 10px !important;
+        padding: 15px 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
       }
       
       .kp-ai-icon {
-        font-size: 24px;
-        animation: kp-sparkle 2s ease-in-out infinite;
+        font-size: 24px !important;
+        animation: kp-sparkle 2s ease-in-out infinite !important;
+        display: inline-block !important;
       }
       
       @keyframes kp-sparkle {
@@ -501,44 +506,32 @@
       }
       
       .kp-ai-text {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        line-height: 1.4;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #333 !important;
+        line-height: 1.4 !important;
       }
       
       .kp-ai-link {
-        color: #0066cc;
-        text-decoration: none;
-        font-weight: 700;
-        transition: all 0.3s ease;
-        border-bottom: 2px solid transparent;
+        color: #0066cc !important;
+        text-decoration: none !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important;
+        border-bottom: 2px solid transparent !important;
       }
       
       .kp-ai-link:hover {
-        color: #0052a3;
-        border-bottom-color: #0052a3;
-        transform: translateY(-1px);
+        color: #0052a3 !important;
+        border-bottom-color: #0052a3 !important;
+        transform: translateY(-1px) !important;
       }
       
       .kp-ai-link:active {
-        transform: translateY(0);
+        transform: translateY(0) !important;
       }
     `;
     
-    // Injecteer direct in .container-bar met meer retries (20x = 10 seconden)
-    injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 20);
-    
-    // Ook na 1 en 3 seconden proberen (voor dynamische content)
-    setTimeout(() => {
-      console.log('[KP Analytics] 🎨 Retry 1: Injecting AI banner...');
-      injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 5);
-    }, 1000);
-    
-    setTimeout(() => {
-      console.log('[KP Analytics] 🎨 Retry 2: Injecting AI banner...');
-      injectContent('.container-bar', aiBannerHTML, aiBannerCSS, '', 5);
-    }, 3000);
+    injectContent('.container-bar', aiBannerHTML, aiBannerCSS);
   }
   
   /**
@@ -557,22 +550,15 @@
       
       if (!element) {
         if (attempt < retries) {
-          if (attempt === 0 || attempt % 5 === 0) {
-            console.log(`[KP Analytics] Waiting for ${selector}... (attempt ${attempt + 1}/${retries})`);
-          }
           setTimeout(() => tryInject(attempt + 1), 500);
           return;
         }
-        console.warn(`[KP Analytics] ❌ Element not found after ${retries} attempts:`, selector);
         return;
       }
-      
-      console.log(`[KP Analytics] ✅ Element found: ${selector}`, element);
       
       // Check of al geïnjecteerd
       const injectId = `kp-injected-${selector.replace(/[^a-zA-Z0-9]/g, '-')}`;
       if (element.querySelector(`[data-kp-injected="${injectId}"]`)) {
-        console.log('[KP Analytics] Content already injected:', selector);
         return;
       }
       
@@ -582,7 +568,6 @@
         wrapper.setAttribute('data-kp-injected', injectId);
         wrapper.innerHTML = html;
         element.appendChild(wrapper);
-        console.log('[KP Analytics] ✅ HTML injected into:', selector, wrapper);
       }
       
       // Injecteer CSS
@@ -595,7 +580,6 @@
           document.head.appendChild(style);
         }
         style.textContent = css;
-        console.log('[KP Analytics] ✅ CSS injected for:', selector);
       }
       
       // Injecteer JavaScript
@@ -604,7 +588,6 @@
           const script = document.createElement('script');
           script.textContent = js;
           document.head.appendChild(script);
-          console.log('[KP Analytics] ✅ JavaScript injected for:', selector);
         } catch (err) {
           console.error('[KP Analytics] JavaScript injection error:', err);
         }
