@@ -505,13 +505,15 @@
       
       .kp-ai-banner-content {
         background: white !important;
-        border-radius: 10px !important;
+        border-radius: 11px !important;
         padding: 14px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 12px !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+        position: relative !important;
+        z-index: 1 !important;
       }
       
       .kp-ai-text {
