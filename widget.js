@@ -308,6 +308,19 @@
       product_price: productPrice
     });
 
+    // Stuur ook naar Google Analytics (alleen URL en source)
+    if (typeof gtag !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get('utm_source') || 'bluestars-ai-site';
+      
+      gtag('event', 'ai_chatbot_visit', {
+        page_location: productUrl,  // URL
+        source: utmSource           // Source (utm_source)
+      });
+      
+      console.log('[KP Analytics] ✅ Sent to Google Analytics:', { url: productUrl, source: utmSource });
+    }
+
     // Sla info op in localStorage voor purchase tracking
     saveProductViewInfo();
 
