@@ -452,7 +452,6 @@
     const aiBannerHTML = `
       <div class="kp-ai-banner">
         <div class="kp-ai-banner-content">
-          <span class="kp-ai-icon">✨</span>
           <span class="kp-ai-text">ai Cadeau tips? <a href="https://kunstpakket.ai" target="_blank" class="kp-ai-link">Klik hier</a></span>
         </div>
       </div>
@@ -500,17 +499,6 @@
         align-items: center !important;
         gap: 12px !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
-      }
-      
-      .kp-ai-icon {
-        font-size: 24px !important;
-        animation: kp-sparkle 2s ease-in-out infinite !important;
-        display: inline-block !important;
-      }
-      
-      @keyframes kp-sparkle {
-        0%, 100% { transform: scale(1) rotate(0deg); }
-        50% { transform: scale(1.2) rotate(180deg); }
       }
       
       .kp-ai-text {
