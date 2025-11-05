@@ -465,13 +465,9 @@
       .kp-ai-banner {
         position: relative !important;
         margin: 15px 0 !important;
-        padding: 1px !important;
+        padding: 0 !important;
         border-radius: 12px !important;
-        background: linear-gradient(90deg, 
-          #ff0080, #ff8c00, #ffd700, #32cd32, #00ced1, #1e90ff, #8a2be2, #ff0080
-        ) !important;
-        background-size: 400% 400% !important;
-        animation: kp-rainbow-border 3s linear infinite !important;
+        background: transparent !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
         display: block !important;
         visibility: visible !important;
@@ -481,25 +477,42 @@
         box-sizing: border-box !important;
       }
       
+      .kp-ai-banner::before {
+        content: '' !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 12px !important;
+        padding: 1px !important;
+        background: conic-gradient(
+          from 0deg,
+          #ff0080,
+          #ff8c00,
+          #ffd700,
+          #32cd32,
+          #00ced1,
+          #1e90ff,
+          #8a2be2,
+          #ff0080
+        ) !important;
+        animation: kp-rainbow-border 3s linear infinite !important;
+        -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0) !important;
+        -webkit-mask-composite: xor !important;
+        mask-composite: exclude !important;
+        z-index: 0 !important;
+      }
+      
       [data-kp-injected="kp-injected--container-bar"] {
         padding: 15px !important;
       }
       
       @keyframes kp-rainbow-border {
         0% { 
-          background-position: 0% 50%;
-        }
-        25% {
-          background-position: 100% 50%;
-        }
-        50% {
-          background-position: 100% 0%;
-        }
-        75% {
-          background-position: 0% 100%;
+          transform: rotate(0deg);
         }
         100% { 
-          background-position: 0% 50%;
+          transform: rotate(360deg);
         }
       }
       
