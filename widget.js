@@ -427,7 +427,8 @@
     // Prioriteit: 1) Opgeslagen prijs van product view, 2) Order total van thank you pagina, 3) 0
     const orderTotal = storedInfo?.product_price || extractOrderTotal() || 0;
     
-    // revenue = vaste €10 per aankoop (VERPLICHT)
+    // revenue = VASTE €10 per aankoop (ALTIJD 10, NIET AANPASBAAR!)
+    // Dit is de vaste fee voor Bluestars per aankoop, onafhankelijk van order_total
     const revenue = 10;
     
     // Gebruik opgeslagen info, of fallback naar huidige pagina
