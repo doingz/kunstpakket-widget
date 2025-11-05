@@ -228,18 +228,53 @@
   }
   
   /**
+   * Extract product price uit URL of pagina
+   */
+  function extractProductPrice() {
+    // Optie 1: Uit URL parameter 'price' (aanbevolen)
+    const urlParams = new URLSearchParams(window.location.search);
+    const priceParam = urlParams.get('price');
+    if (priceParam) {
+      const value = parseFloat(priceParam);
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    // Optie 2: Uit data attribute
+    const priceEl = document.querySelector('[data-product-price]');
+    if (priceEl) {
+      const value = parseFloat(priceEl.getAttribute('data-product-price'));
+      if (!isNaN(value) && value > 0) return value;
+    }
+    
+    // Optie 3: Uit prijs elementen in DOM
+    const priceElements = document.querySelectorAll('[class*="price"]:not([class*="total"])');
+    for (const el of priceElements) {
+      const text = el.textContent || el.innerText;
+      const match = text.match(/€?\s*(\d+[.,]\d{2})/);
+      if (match) {
+        const value = parseFloat(match[1].replace(',', '.'));
+        if (!isNaN(value) && value > 0) return value;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
    * Sla product view info op in localStorage
    */
   function saveProductViewInfo() {
     const productId = extractProductId();
     const productUrl = window.location.href;
     const productTitle = extractProductTitle();
+    const productPrice = extractProductPrice(); // Extract price from URL or DOM
 
     // Sla op in localStorage voor purchase tracking
     try {
       localStorage.setItem('kp_product_id', productId || '');
       localStorage.setItem('kp_product_url', productUrl || '');
-      localStorage.setItem('kp_product_title', productTitle || ''); // NIEUW!
+      localStorage.setItem('kp_product_title', productTitle || '');
+      localStorage.setItem('kp_product_price', productPrice ? productPrice.toString() : '');
       localStorage.setItem('kp_view_timestamp', Date.now().toString());
     } catch (e) {
       console.warn('[KP Analytics] Failed to save to localStorage:', e);
@@ -262,13 +297,15 @@
     const productId = extractProductId();
     const productUrl = window.location.href;
     const productTitle = extractProductTitle();
+    const productPrice = extractProductPrice();
 
     // Track view event
     trackEvent({
       event: 'view',
       product_id: productId,
       product_url: productUrl,
-      product_title: productTitle  // NIEUW!
+      product_title: productTitle,
+      product_price: productPrice
     });
 
     // Sla info op in localStorage voor purchase tracking
@@ -298,10 +335,13 @@
         }
       }
 
+      const productPrice = localStorage.getItem('kp_product_price');
+      
       return {
         product_id: productId,
         product_url: productUrl,
-        product_title: productTitle  // NIEUW!
+        product_title: productTitle,
+        product_price: productPrice ? parseFloat(productPrice) : null
       };
     } catch (e) {
       console.warn('[KP Analytics] Failed to read from localStorage:', e);
@@ -316,7 +356,8 @@
     try {
       localStorage.removeItem('kp_product_id');
       localStorage.removeItem('kp_product_url');
-      localStorage.removeItem('kp_product_title'); // NIEUW!
+      localStorage.removeItem('kp_product_title');
+      localStorage.removeItem('kp_product_price');
       localStorage.removeItem('kp_view_timestamp');
     } catch (e) {
       // Ignore
@@ -332,11 +373,21 @@
     if (window.purchaseTracked) return;
     window.purchaseTracked = true;
     
+    // Haal product info op uit localStorage (van product view)
+    const storedInfo = getStoredProductInfo();
+    
     // Extract order_total (productprijs/orderwaarde) - VERPLICHT
-    const orderTotal = extractOrderTotal();
+    // Probeer eerst van thank you pagina, anders van stored product_price
+    let orderTotal = extractOrderTotal();
+    
+    // Fallback: gebruik product_price uit localStorage (van product view)
+    if (!orderTotal && storedInfo?.product_price) {
+      orderTotal = storedInfo.product_price;
+      console.log('[KP Analytics] Using product_price from localStorage as order_total:', orderTotal);
+    }
     
     // ⚠️ KRITIEK: Stop als order_total ontbreekt
-    if (orderTotal === null || orderTotal === undefined || orderTotal <= 0) {
+    if (!orderTotal || orderTotal <= 0) {
       console.error('[KP Analytics] ❌ Order total not found or invalid:', orderTotal);
       console.warn('[KP Analytics] Purchase not tracked - order_total is required');
       window.purchaseTracked = false; // Reset zodat we kunnen retry
@@ -344,11 +395,7 @@
     }
     
     // Bereken revenue (voor Bluestars) - VERPLICHT
-    // Vaste €10 per aankoop, of bereken op basis van order_total
-    const revenue = 10.00; // Of: orderTotal * 0.10 voor 10% van orderwaarde
-    
-    // Haal product info op uit localStorage (van product view)
-    const storedInfo = getStoredProductInfo();
+    const revenue = 10.00;
     
     // Gebruik opgeslagen info, of fallback naar huidige pagina
     const productId = storedInfo?.product_id || extractProductId();
